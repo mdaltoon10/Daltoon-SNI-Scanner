@@ -31,7 +31,7 @@ export function Footer({
               ? 'در حال اسکن زنده...'
               : 'Scanning...'
             : lang === 'fa'
-            ? 'آماده تست'
+            ? 'آماده اسکن'
             : 'Ready'}
         </strong>
       </div>

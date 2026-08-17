@@ -12,7 +12,36 @@ export async function safeReadClipboard(): Promise<string | null> {
       }
     }
   } catch (err) {
-    // Expected on non-HTTPS origins (e.g. plain HTTP IP on mobile chrome)
+    console.warn('Clipboard readText failed or restricted:', err);
+  }
+
+  // 2. Try execCommand fallback via hidden editable element
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.contentEditable = 'true';
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    const success = document.execCommand('paste');
+    const pasted = textarea.value;
+    document.body.removeChild(textarea);
+    if (success && pasted && pasted.trim()) {
+      return pasted.trim();
+    }
+  } catch {
+    // Ignore
+  }
+
+  // 3. Prompt fallback if browser security blocks automatic clipboard read
+  try {
+    const userEntered = window.prompt('متن کانفیگ را اینجا جاگذاری (Paste) کنید:');
+    if (userEntered && userEntered.trim()) {
+      return userEntered.trim();
+    }
+  } catch {
+    // Ignore
   }
 
   return null;
@@ -44,4 +73,3 @@ export async function safeWriteClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
-
