@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Radio, Clock, Globe2 } from 'lucide-react';
+import { Radio, Clock, Globe2, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   lang: 'fa' | 'en';
   onToggleLang: () => void;
   isScanning: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
 export function Header({
   lang,
   onToggleLang,
   isScanning,
+  theme,
+  onToggleTheme
 }: HeaderProps) {
   const [timeStr, setTimeStr] = useState<string>('00:00:00');
 
@@ -46,8 +50,8 @@ export function Header({
         </div>
       </div>
 
-      {/* Right Controls: Clock, Language, Links */}
-      <div className="flex items-center gap-3 sm:gap-4 text-[11px] uppercase tracking-widest flex-wrap">
+      {/* Right Controls: Clock, Theme, Language, Links */}
+      <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] uppercase tracking-widest flex-wrap">
         {/* Clock */}
         <div className="hidden sm:flex flex-col text-right">
           <span className="text-slate-500 text-[9px] flex items-center justify-end gap-1">
@@ -56,6 +60,38 @@ export function Header({
           </span>
           <span className="text-cyan-200 font-mono">{timeStr}</span>
         </div>
+
+        {/* Theme Switcher Button (Sun ☀️ / Moon 🌙) */}
+        <button
+          onClick={onToggleTheme}
+          id="theme-toggle-btn"
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer hover:scale-105 ${
+            theme === 'dark'
+              ? 'border-amber-500/60 bg-gradient-to-r from-amber-950/80 to-slate-900/90 text-amber-300 hover:text-white hover:border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
+              : 'border-amber-600/80 bg-amber-100 text-amber-900 hover:bg-amber-200 hover:border-amber-700 shadow-sm'
+          }`}
+          title={
+            lang === 'fa'
+              ? theme === 'dark'
+                ? 'تغییر به تم روشن'
+                : 'تغییر به تم تاریک'
+              : theme === 'dark'
+              ? 'Switch to Light Theme'
+              : 'Switch to Dark Theme'
+          }
+        >
+          {theme === 'dark' ? (
+            <>
+              <Sun className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+              <span className="font-sans">{lang === 'fa' ? 'تم روشن' : 'Light'}</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-3.5 h-3.5 text-indigo-700" />
+              <span className="font-sans">{lang === 'fa' ? 'تم تاریک' : 'Dark'}</span>
+            </>
+          )}
+        </button>
 
         {/* Language Switcher */}
         <button

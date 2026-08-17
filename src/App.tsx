@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Sparkles, SlidersHorizontal } from 'lucide-react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -20,6 +20,37 @@ import { probeSingleSni, fetchOnlineSnis, fetchGlobalSniUniverse } from './utils
 import { parseProxyConfig, generateMultiFormatConfigs } from './utils/configParser';
 
 export function App() {
+  // Theme State ('dark' | 'light')
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      const saved = localStorage.getItem('daltoon_theme');
+      return saved === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.add('light-theme');
+      root.classList.remove('dark-theme');
+    } else {
+      root.classList.add('dark-theme');
+      root.classList.remove('light-theme');
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    try {
+      localStorage.setItem('daltoon_theme', nextTheme);
+    } catch {
+      // Ignore
+    }
+  };
+
   // 1. Core State
   const [lang, setLang] = useState<'fa' | 'en'>('fa');
   const [rawConfig, setRawConfig] = useState<string>('');
@@ -288,6 +319,8 @@ export function App() {
           lang={lang}
           onToggleLang={() => setLang(lang === 'fa' ? 'en' : 'fa')}
           isScanning={isScanning}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
       </div>
 
