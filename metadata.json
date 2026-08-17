@@ -1,0 +1,6 @@
+{
+  "name": "Daltoon SNI Scanner",
+  "description": "SNI (Server Name Indication) Scanner and domain testing suite for analyzing TLS handshakes, ping, latency, HTTP status, CDN IPs, and clean SNI host discovery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
