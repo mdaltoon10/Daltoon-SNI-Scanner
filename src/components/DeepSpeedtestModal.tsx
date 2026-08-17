@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { runDeepSpeedTest } from '../utils/scannerEngine';
-import { NetworkProfile } from '../types';
-import { NETWORK_PROFILES } from '../data/presetSnilist';
 import { Gauge, X, Play, RefreshCw, Copy, Check, ShieldCheck, Zap, Wifi } from 'lucide-react';
 
 interface DeepSpeedtestModalProps {
   sni: string;
   onClose: () => void;
-  currentProfile?: NetworkProfile;
   onApplyConfig?: (sni: string) => void;
   lang: 'fa' | 'en';
 }
@@ -15,7 +12,6 @@ interface DeepSpeedtestModalProps {
 export function DeepSpeedtestModal({
   sni,
   onClose,
-  currentProfile = NETWORK_PROFILES[0],
   onApplyConfig,
   lang
 }: DeepSpeedtestModalProps) {
@@ -69,7 +65,7 @@ export function DeepSpeedtestModal({
   }, [sni]);
 
   const copyBenchmarkSummary = () => {
-    const summary = `=== SNI Speedtest.net Benchmark ===\nTarget SNI: ${sni}\nNetwork Profile: ${currentProfile.name}\nPing: ${ping}ms (Jitter: ${jitter}ms, Min: ${minPing}ms, Max: ${maxPing}ms)\nDownload: ${download} Mbps\nUpload: ${upload} Mbps\nSecurity: TLS 1.3 / ECH\nStatus: ${ping < 120 ? 'EXCELLENT / CLEAN' : 'GOOD'}`;
+    const summary = `=== SNI Speedtest.net Benchmark ===\nTarget SNI: ${sni}\nPing: ${ping}ms (Jitter: ${jitter}ms, Min: ${minPing}ms, Max: ${maxPing}ms)\nDownload: ${download} Mbps\nUpload: ${upload} Mbps\nSecurity: TLS 1.3 / ECH\nStatus: ${ping < 120 ? 'EXCELLENT / CLEAN' : 'GOOD'}`;
     navigator.clipboard.writeText(summary);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -111,7 +107,7 @@ export function DeepSpeedtestModal({
               <span className="text-[10px] text-slate-500 uppercase tracking-widest block">
                 {lang === 'fa' ? 'شبکه فعال' : 'Active Connection'}
               </span>
-              <span className="text-xs text-slate-300 font-semibold">{currentProfile.name}</span>
+              <span className="text-xs text-slate-300 font-semibold">{lang === 'fa' ? 'اینترنت واقعی دستگاه' : 'Direct Mobile/Wi-Fi'}</span>
             </div>
           </div>
 

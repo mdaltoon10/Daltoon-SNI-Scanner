@@ -46,9 +46,9 @@ export async function probeSingleSni(
 
   // 1. Initial Injection & Probe Log
   if (rawConfig && targetHost) {
-    sendLog('inject', `[INJECT] جایگزینی هاست «${domain}» در کانفیگ سرور «${targetHost}:${targetPort}» (${carrierName})`);
+    sendLog('inject', `[INJECT] جایگزینی هاست «${domain}» در کانفیگ سرور «${targetHost}:${targetPort}»`);
   } else {
-    sendLog('info', `[PROBE] تست اتصال زنده TLS به دامنه‌ «${domain}» روی شبکه (${carrierName})`);
+    sendLog('info', `[PROBE] تست اتصال زنده TLS به دامنه‌ «${domain}»`);
   }
 
   try {
@@ -141,11 +141,11 @@ export async function probeSingleSni(
     }
 
     if (status === 'CLEAN') {
-      sendLog('success', `[سالم] دامنه «${domain}» روی «${carrierName}» پاسخ داد | پینگ: ${Math.round(ping)}ms | دانلود تخمینی: ${downloadSpeed} Mbps`, Math.round(ping), downloadSpeed);
+      sendLog('success', `[سالم] دامنه «${domain}» پاسخ داد | پینگ: ${Math.round(ping)}ms | دانلود تخمینی: ${downloadSpeed} Mbps`, Math.round(ping), downloadSpeed);
     } else if (status === 'THROTTLED') {
-      sendLog('warning', `[کُند] تاخیر بالا برای دامنه «${domain}» روی «${carrierName}» | پینگ: ${Math.round(ping)}ms`, Math.round(ping), downloadSpeed);
+      sendLog('warning', `[کُند] تاخیر بالا برای دامنه «${domain}» | پینگ: ${Math.round(ping)}ms`, Math.round(ping), downloadSpeed);
     } else {
-      sendLog('error', `[تایم‌اوت/بلاک] عدم پاسخگویی دامنه «${domain}» روی «${carrierName}» (پکت دراپ DPI)`, null, 0);
+      sendLog('error', `[تایم‌اوت/بلاک] عدم پاسخگویی دامنه «${domain}» (پکت دراپ DPI)`, null, 0);
     }
 
     return {

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ScanParameters, NetworkProfile, ParsedProxyConfig } from '../types';
+import { ScanParameters, ParsedProxyConfig } from '../types';
 import {
   Play,
   Square,
@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   DownloadCloud,
   Globe,
-  Radio,
   Sparkles,
   Server,
   ClipboardPaste,
@@ -33,7 +32,6 @@ interface SidebarProps {
   onFetchOnlineSnis: () => void;
   isFetchingOnline: boolean;
   onlineFetchCount: number;
-  currentProfile: NetworkProfile;
   lang: 'fa' | 'en';
   totalSnisInQueue: number;
 }
@@ -51,7 +49,6 @@ export function Sidebar({
   onFetchOnlineSnis,
   isFetchingOnline,
   onlineFetchCount,
-  currentProfile,
   lang,
   totalSnisInQueue
 }: SidebarProps) {

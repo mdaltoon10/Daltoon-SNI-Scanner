@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Sparkles, SlidersHorizontal } from 'lucide-react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -7,30 +7,23 @@ import { DeepSpeedtestModal } from './components/DeepSpeedtestModal';
 import { ConfigGeneratorModal } from './components/ConfigGeneratorModal';
 import { CustomSniModal } from './components/CustomSniModal';
 import { CleanSpeedFilterModal } from './components/CleanSpeedFilterModal';
-import { OperatorDetectBanner } from './components/OperatorDetectBanner';
 import { Footer } from './components/Footer';
 import {
   SniItem,
   SniScanResult,
   ScanParameters,
-  NetworkProfile,
   ParsedProxyConfig,
   ScanLogEntry
 } from './types';
-import { PRESET_SNI_LIST, NETWORK_PROFILES } from './data/presetSnilist';
+import { PRESET_SNI_LIST } from './data/presetSnilist';
 import { probeSingleSni, fetchOnlineSnis, fetchGlobalSniUniverse } from './utils/scannerEngine';
 import { parseProxyConfig, generateMultiFormatConfigs } from './utils/configParser';
-import { detectClientOperator, ClientCarrierInfo, CARRIER_SIGNATURES } from './utils/carrierDetector';
 
 export function App() {
   // 1. Core State
   const [lang, setLang] = useState<'fa' | 'en'>('fa');
   const [rawConfig, setRawConfig] = useState<string>('');
   const [parsedConfig, setParsedConfig] = useState<ParsedProxyConfig | null>(null);
-
-  // Auto Operator / Carrier Detection State (Speedtest-like)
-  const [carrierInfo, setCarrierInfo] = useState<ClientCarrierInfo | null>(null);
-  const [isDetectingCarrier, setIsDetectingCarrier] = useState<boolean>(true);
 
   // Scan Parameters
   const [parameters, setParameters] = useState<ScanParameters>({
@@ -40,18 +33,7 @@ export function App() {
     testPayloadMb: 2,
     packetSizeMtu: 1400,
     fragmentationMode: true,
-    networkProfile: NETWORK_PROFILES[0].id
-  });
-
-  // Network Profile & User Preference Persistence
-  const isUserManualRef = useRef<boolean>(!!localStorage.getItem('daltoon_selected_operator_id'));
-  const [currentProfile, setCurrentProfile] = useState<NetworkProfile>(() => {
-    const saved = localStorage.getItem('daltoon_selected_operator_id');
-    if (saved) {
-      const found = NETWORK_PROFILES.find((p) => p.id === saved);
-      if (found) return found;
-    }
-    return NETWORK_PROFILES[0]; // MCI by default
+    networkProfile: 'default'
   });
 
   // SNI Master List & Results
@@ -80,194 +62,43 @@ export function App() {
     ).length;
   }, [results]);
 
-  // 2. Auto-Detect Carrier on App Load (Speedtest-like intelligence)
-  const runCarrierDetection = async (overrideProfileId?: string, forceAutoRedetect = false) => {
-    setIsDetectingCarrier(true);
-    const minSpinPromise = new Promise((resolve) => setTimeout(resolve, 850));
-
-    if (forceAutoRedetect) {
-      isUserManualRef.current = false;
-      localStorage.removeItem('daltoon_selected_operator_id');
+  // Handle Raw Config Change & Auto Parsing
+  const handleConfigChange = (cfg: string) => {
+    setRawConfig(cfg);
+    if (!cfg.trim()) {
+      setParsedConfig(null);
+      return;
     }
-
-    try {
-      const targetPref = overrideProfileId || (!forceAutoRedetect ? currentProfile?.id : undefined);
-      const [detected] = await Promise.all([
-        detectClientOperator(targetPref),
-        minSpinPromise
-      ]);
-
-      if (overrideProfileId) {
-        isUserManualRef.current = true;
-        localStorage.setItem('daltoon_selected_operator_id', overrideProfileId);
-      }
-
-      // Auto-match network profile if detected (MCI, Irancell, Rightel, Shatel, Mokhaberat, etc.)
-      const matchedProfile = NETWORK_PROFILES.find((p) => p.id === detected.matchedProfileId) || NETWORK_PROFILES[0];
-      if (matchedProfile && (!isUserManualRef.current || forceAutoRedetect || overrideProfileId)) {
-        setCurrentProfile(matchedProfile);
-        setParameters((prev) => ({
-          ...prev,
-          networkProfile: matchedProfile.id,
-          packetSizeMtu: matchedProfile.defaultMtu
-        }));
-      }
-
-      setCarrierInfo(detected);
-    } catch (err) {
-      console.error('Error detecting carrier:', err);
-    } finally {
-      setIsDetectingCarrier(false);
-    }
+    const parsed = parseProxyConfig(cfg);
+    setParsedConfig(parsed);
   };
 
-  const handleSelectProfile = (profile: NetworkProfile) => {
-    isUserManualRef.current = true;
-    localStorage.setItem('daltoon_selected_operator_id', profile.id);
-
-    setCurrentProfile(profile);
-    setParameters((prev) => ({
-      ...prev,
-      networkProfile: profile.id,
-      packetSizeMtu: profile.defaultMtu
+  // Add Custom SNIs from manual import or Github repos
+  const handleAddCustomSnis = (domains: string[], category: string = 'custom') => {
+    const newItems: SniItem[] = domains.map((domain, index) => ({
+      id: `custom-${Date.now()}-${index}`,
+      domain: domain.trim().toLowerCase(),
+      category,
+      isPopular: true,
+      description: 'دامنه‌ سفارشی / آنلاین کاربر'
     }));
 
-    setCarrierInfo((prev) => {
-      const isVpn = prev ? !prev.isIran : false;
-      const displayFa = isVpn ? `${profile.nameFa} (VPN/خارج)` : profile.nameFa;
-      const displayEn = isVpn ? `${profile.name} (VPN)` : profile.name;
+    const existingDomains = new Set(sniMasterList.map((s) => s.domain.toLowerCase()));
+    const filteredNew = newItems.filter((item) => !existingDomains.has(item.domain));
 
-      if (!prev) {
-        return {
-          ip: '127.0.0.1',
-          isp: profile.name,
-          org: profile.name,
-          as: profile.asn,
-          asname: profile.name,
-          city: 'Tehran',
-          region: 'Tehran',
-          country: 'Iran',
-          countryCode: 'IR',
-          matchedProfileId: profile.id,
-          matchedProfileName: displayEn,
-          matchedProfileNameFa: displayFa,
-          isIran: true,
-          cellularOrMobile: true,
-          detectedAt: new Date().toISOString(),
-          source: 'Manual Selection'
-        };
-      }
-
-      return {
-        ...prev,
-        matchedProfileId: profile.id,
-        matchedProfileName: displayEn,
-        matchedProfileNameFa: displayFa
-      };
-    });
-  };
-
-  useEffect(() => {
-    runCarrierDetection();
-  }, []);
-
-  // 2b. Quick scan tailored to detected operator
-  const handleQuickScanDetectedOperator = () => {
-    // If operator has preferred categories, prioritize them or start full clean probe
-    handleStartScan();
-  };
-
-  // 3. Parse config on change
-  useEffect(() => {
-    if (rawConfig.trim()) {
-      const parsed = parseProxyConfig(rawConfig);
-      setParsedConfig(parsed);
-    } else {
-      setParsedConfig(null);
-    }
-  }, [rawConfig]);
-
-  // 3. Initialize results table from master list (preserving existing tested metrics)
-  useEffect(() => {
-    setResults((prev) => {
-      const existingMap = new Map(prev.map((p) => [p.domain.toLowerCase(), p]));
-      return sniMasterList.map((item) => {
-        const existing = existingMap.get(item.domain.toLowerCase());
-        if (existing) return existing;
-        return {
-          id: item.id,
-          domain: item.domain,
-          category: item.category,
-          ping: null,
-          downloadSpeed: null,
-          uploadSpeed: null,
-          fragmentationScore: 1,
-          tlsVersion: 'TLS 1.3',
-          status: 'IDLE',
-          packetLoss: 0,
-          jitter: 0
-        };
-      });
-    });
-  }, [sniMasterList]);
-
-  // 4. Global Million-Scale Streamer (Yahoo, Cloudflare, Akamai, Fastly, Google, etc.)
-  const handleFetchGlobalStream = async (category: string = 'all', count: number = 3500) => {
-    setIsStreamingGlobal(true);
-    try {
-      const response = await fetchGlobalSniUniverse({
-        category,
-        limit: count,
-        offset: 0,
-        synthetic: true
-      });
-
-      if (response.domains && response.domains.length > 0) {
-        const newItems: SniItem[] = response.domains.map((item, idx) => ({
-          id: `global-${category}-${Date.now()}-${idx}`,
-          domain: item.domain,
-          category: item.category as any,
-          recommendedProfile: 'Worldwide TLS 1.3 / ECH',
-          description: `${item.cdn} (Worldwide Anycast Node)`
-        }));
-
-        setSniMasterList((prev) => {
-          const existingDomains = new Set(prev.map((p) => p.domain.toLowerCase()));
-          const uniqueNew = newItems.filter((i) => !existingDomains.has(i.domain.toLowerCase()));
-          return [...prev, ...uniqueNew];
-        });
-
-        setGlobalStreamOffset((prev) => prev + count);
-      }
-    } catch (err) {
-      console.error('Error streaming global SNIs:', err);
-    } finally {
-      setIsStreamingGlobal(false);
+    if (filteredNew.length > 0) {
+      setSniMasterList((prev) => [...filteredNew, ...prev]);
     }
   };
 
-  // 5. Online SNI Fetcher (GitHub & curated dynamic sources)
+  // Fetch online SNIs
   const handleFetchOnlineSnis = async (customUrl?: string) => {
     setIsFetchingOnline(true);
     try {
-      const onlineDomains = await fetchOnlineSnis(customUrl);
-      if (onlineDomains.length > 0) {
-        const newItems: SniItem[] = onlineDomains.map((dom, idx) => ({
-          id: `online-${Date.now()}-${idx}`,
-          domain: dom,
-          category: 'custom',
-          recommendedProfile: 'IR-MCI / Irancell 4G/5G',
-          description: 'Fetched live from online repository'
-        }));
-
-        // Merge with existing, filtering duplicates
-        setSniMasterList((prev) => {
-          const existingDomains = new Set(prev.map((p) => p.domain.toLowerCase()));
-          const uniqueNew = newItems.filter((i) => !existingDomains.has(i.domain.toLowerCase()));
-          return [...prev, ...uniqueNew];
-        });
-
-        setOnlineFetchCount(onlineDomains.length);
+      const fetched = await fetchOnlineSnis(customUrl);
+      if (fetched && fetched.length > 0) {
+        handleAddCustomSnis(fetched, 'online_github');
+        setOnlineFetchCount(fetched.length);
       }
     } catch (err) {
       console.error('Error fetching online SNIs:', err);
@@ -276,127 +107,149 @@ export function App() {
     }
   };
 
-  // 6. Add custom SNIs manually or from custom sub URL
-  const handleAddCustomSnis = (domains: string[], category: string) => {
-    const newItems: SniItem[] = domains.map((domain, index) => ({
-      id: `custom-${Date.now()}-${index}`,
-      domain: domain.trim(),
-      category: category as any,
-      recommendedProfile: currentProfile.name,
-      description: 'Custom imported domain'
-    }));
+  // Infinite Global SNI Feed Streamer
+  const handleFetchGlobalStream = async (category: string = 'all', limit: number = 200, offset?: number) => {
+    setIsStreamingGlobal(true);
+    const currentOffset = offset !== undefined ? offset : globalStreamOffset;
+    try {
+      const res = await fetchGlobalSniUniverse({
+        category,
+        offset: currentOffset,
+        limit,
+        synthetic: true
+      });
 
-    setSniMasterList((prev) => [...newItems, ...prev]);
+      if (res && res.domains.length > 0) {
+        const mapped: SniItem[] = res.domains.map((d, i) => ({
+          id: `global-${currentOffset + i}`,
+          domain: d.domain,
+          category: d.category,
+          isPopular: d.isPopular,
+          description: d.cdn
+        }));
+
+        const existingSet = new Set(sniMasterList.map((s) => s.domain.toLowerCase()));
+        const unique = mapped.filter((m) => !existingSet.has(m.domain.toLowerCase()));
+
+        setSniMasterList((prev) => [...prev, ...unique]);
+        setGlobalStreamOffset(currentOffset + limit);
+      }
+    } catch (err) {
+      console.error('Failed to stream global SNIs:', err);
+    } finally {
+      setIsStreamingGlobal(false);
+    }
   };
 
-  // 7. Filtered queue based on category
+  // Filter Active Queue based on category
   const activeQueue = useMemo(() => {
     if (parameters.category === 'all') return sniMasterList;
     return sniMasterList.filter((item) => item.category === parameters.category);
   }, [sniMasterList, parameters.category]);
 
-  // 8. Real Scanner Worker Loop with Concurrency Control & Live Execution Logging
+  // Log handler
+  const handleScanLog = (log: ScanLogEntry) => {
+    setLiveLogs((prev) => [log, ...prev.slice(0, 150)]);
+  };
+
+  // Start Real Client-Side Scanner
   const handleStartScan = async () => {
     if (isScanning) return;
     setIsScanning(true);
+    abortControllerRef.current = new AbortController();
 
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    const initialResults: SniScanResult[] = activeQueue.map((item) => ({
+      id: item.id,
+      domain: item.domain,
+      category: item.category,
+      ping: null,
+      downloadSpeed: null,
+      uploadSpeed: null,
+      fragmentationScore: null,
+      tlsVersion: null,
+      status: 'IDLE' as any,
+      packetLoss: 0,
+      jitter: 0,
+      httpStatus: 0
+    }));
+    setResults(initialResults);
 
-    const carrierName = carrierInfo?.matchedProfileNameFa || currentProfile?.nameFa || 'شبکه شما';
-    const targetHost = parsedConfig?.server || '';
-    const targetPort = parsedConfig?.port || 443;
-
-    // Reset targeted items to TESTING
-    setResults((prev) =>
-      prev.map((r) => {
-        const isInQueue = activeQueue.some((q) => q.id === r.id);
-        if (isInQueue) {
-          return { ...r, status: 'TESTING', ping: null, downloadSpeed: null, uploadSpeed: null };
-        }
-        return r;
-      })
-    );
-
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-    
-    // Initial start log
-    setLiveLogs((prev) => [
-      {
-        id: `start-${Date.now()}`,
-        time: timeStr,
-        type: 'info' as const,
-        domain: targetHost || 'Multi-CDN',
-        message: targetHost
-          ? `[START] شروع اسکن زنده روی هاست «${targetHost}:${targetPort}» با اپراتور «${carrierName}» (${activeQueue.length} دامنه)`
-          : `[START] شروع اسکن زنده روی اپراتور «${carrierName}» (${activeQueue.length} دامنه در صف تست)`
-      },
-      ...prev
-    ].slice(0, 500));
-
+    // Concurrency Worker Pool
     const queue = [...activeQueue];
-    // When proxy config is provided, run sequential test (concurrency 1 or low) so user sees each SNI tested and benchmarked one by one
-    const concurrency = rawConfig.trim() ? 1 : Math.max(1, parameters.concurrency || 6);
+    const concurrency = Math.min(parameters.concurrency || 8, queue.length);
 
-    const worker = async () => {
-      while (queue.length > 0 && !abortController.signal.aborted) {
+    const runWorker = async () => {
+      while (queue.length > 0) {
+        if (abortControllerRef.current?.signal.aborted) break;
+
         const item = queue.shift();
         if (!item) break;
 
         try {
-          const scanResult = await probeSingleSni(item, parameters, {
-            targetHost: targetHost || undefined,
-            targetPort: targetPort || 443,
-            carrierName,
-            rawConfig: rawConfig.trim() || undefined,
-            onLog: (newLog) => {
-              setLiveLogs((prev) => [newLog, ...prev].slice(0, 500));
-            }
+          const res = await probeSingleSni(item, parameters, {
+            targetHost: parsedConfig?.server,
+            targetPort: parsedConfig?.port,
+            rawConfig: rawConfig,
+            onLog: handleScanLog
           });
-          if (abortController.signal.aborted) break;
 
           setResults((prev) =>
-            prev.map((r) => (r.id === scanResult.id ? scanResult : r))
+            prev.map((r) => (r.id === res.id ? { ...res, testedAt: new Date() } : r))
           );
-        } catch {
-          if (abortController.signal.aborted) break;
+        } catch (err) {
+          console.error(`Error scanning ${item.domain}:`, err);
         }
       }
     };
 
-    // Launch worker threads in parallel
-    const workerPromises = Array.from({ length: concurrency }, () => worker());
-    await Promise.all(workerPromises);
+    const workers = Array.from({ length: concurrency }).map(() => runWorker());
+    await Promise.all(workers);
 
     setIsScanning(false);
   };
 
+  // Stop Active Scan
   const handleStopScan = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-      abortControllerRef.current = null;
     }
     setIsScanning(false);
   };
 
-  // 9. Export Generated Injected Configs
-  const handleExportSnis = (snis: SniScanResult[], format: 'txt' | 'json' | 'vless') => {
+  // Export SNIs / VLESS
+  const handleExportSnis = (
+    targetSnis?: SniScanResult[] | 'clean' | 'all' | 'vless' | 'top_speed',
+    format: 'txt' | 'json' | 'vless' = 'txt'
+  ) => {
+    let snis: SniScanResult[] = [];
+    let exportType = 'export';
+
+    if (Array.isArray(targetSnis)) {
+      snis = targetSnis.length > 0 ? targetSnis : results;
+      exportType = format;
+    } else {
+      const type = targetSnis || 'clean';
+      exportType = type;
+      if (type === 'clean') {
+        snis = results.filter((r) => r.status === 'CLEAN');
+      } else if (type === 'top_speed') {
+        snis = results.filter((r) => r.status === 'CLEAN' && (r.downloadSpeed || 0) >= 1.0);
+      } else {
+        snis = results;
+      }
+    }
+
     if (snis.length === 0) {
-      alert(lang === 'fa' ? 'هیچ دامنه‌ای برای خروجی انتخاب نشده است.' : 'No domains to export.');
-      return;
+      snis = results;
     }
 
     let content = '';
-    let fileName = `sni-scan-export-${Date.now()}`;
+    let fileName = `daltoon-snis-${exportType}-${new Date().toISOString().slice(0, 10)}`;
 
-    if (format === 'txt') {
-      content = snis.map((s) => s.domain).join('\n');
-      fileName += '.txt';
-    } else if (format === 'json') {
+    if (format === 'json') {
       content = JSON.stringify(snis, null, 2);
       fileName += '.json';
-    } else if (format === 'vless') {
+    } else if (format === 'vless' || exportType === 'vless') {
       if (parsedConfig) {
         content = snis
           .map((s) => {
@@ -413,6 +266,9 @@ export function App() {
           .join('\n');
       }
       fileName += '-vless.txt';
+    } else {
+      content = snis.map((s) => s.domain).join('\n');
+      fileName += '.txt';
     }
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -426,48 +282,24 @@ export function App() {
 
   return (
     <div className="min-h-screen w-full bg-[#07080D] text-slate-300 font-mono flex flex-col selection:bg-cyan-500 selection:text-black">
-      {/* 1. Sticky Header with Operator Profile, Mode Switch & Lang Switch */}
+      {/* 1. Header */}
       <div className="sticky top-0 z-30 w-full backdrop-blur-md bg-[#0D0F16]/95 border-b border-cyan-900/30">
         <Header
-          currentProfile={currentProfile}
-          onSelectProfile={handleSelectProfile}
           lang={lang}
           onToggleLang={() => setLang(lang === 'fa' ? 'en' : 'fa')}
           isScanning={isScanning}
-          onOpenSpeedFilterModal={() => setIsSpeedFilterModalOpen(true)}
-          cleanSpeedCount={cleanSpeedCount}
-          carrierInfo={carrierInfo}
-          isDetectingCarrier={isDetectingCarrier}
-          onRefreshCarrier={() => runCarrierDetection(undefined, true)}
         />
       </div>
 
-      {/* 2. Main Workspace Layout (Unified, Fluid, Full Page Scrolling) */}
+      {/* 2. Main Workspace Layout */}
       <div className="flex-1 w-full max-w-[1800px] mx-auto p-3 sm:p-5 lg:p-6 space-y-5">
-        {/* Speedtest-style Auto-Carrier Detection Banner */}
-        <OperatorDetectBanner
-          carrierInfo={carrierInfo}
-          isDetecting={isDetectingCarrier}
-          onRefreshDetection={() => runCarrierDetection(undefined, true)}
-          currentProfile={currentProfile}
-          onApplyProfile={(profileId) => {
-            const found = NETWORK_PROFILES.find((p) => p.id === profileId);
-            if (found) {
-              handleSelectProfile(found);
-            }
-          }}
-          lang={lang}
-          onQuickScanOperator={handleQuickScanDetectedOperator}
-          isScanning={isScanning}
-        />
-
         <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
           {/* Left: Input, Controls & Online Fetcher (Sticky on Desktop) */}
           <Sidebar
             parameters={parameters}
             onChangeParameters={setParameters}
             rawConfig={rawConfig}
-            onChangeRawConfig={setRawConfig}
+            onChangeRawConfig={handleConfigChange}
             parsedConfig={parsedConfig}
             onStartScan={handleStartScan}
             onStopScan={handleStopScan}
@@ -476,12 +308,11 @@ export function App() {
             onFetchOnlineSnis={() => handleFetchOnlineSnis()}
             isFetchingOnline={isFetchingOnline}
             onlineFetchCount={onlineFetchCount}
-            currentProfile={currentProfile}
             lang={lang}
             totalSnisInQueue={activeQueue.length}
           />
 
-          {/* Right: Live Benchmark Table & Speed Stats (Seamlessly Expanding) */}
+          {/* Right: Live Benchmark Table & Speed Stats */}
           <ActiveProbeFeed
             results={results}
             isScanning={isScanning}
@@ -509,8 +340,8 @@ export function App() {
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
                   {lang === 'fa'
-                    ? 'لیست دامنه های سفارسی و تنظیم مقدار دانلود/اپلود اسپید تست'
-                    : 'Custom Domains List & Speedtest Up/Down Config'}
+                    ? 'لیست دامنه‌های تمیز و تنظیم مقدار دانلود/آپلود اسپیدتست'
+                    : 'Clean Domains List & Speedtest Thresholds'}
                 </h3>
                 <span className="text-xs bg-emerald-950 text-emerald-300 border border-emerald-700/80 px-2.5 py-0.5 rounded-full font-bold">
                   {cleanSpeedCount} {lang === 'fa' ? 'دامنه واجد شرایط' : 'Qualified'}
