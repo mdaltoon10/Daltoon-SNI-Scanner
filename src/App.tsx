@@ -77,6 +77,31 @@ export function App() {
   const [isStreamingGlobal, setIsStreamingGlobal] = useState<boolean>(false);
   const [globalStreamOffset, setGlobalStreamOffset] = useState<number>(0);
 
+  // Synchronize sniMasterList items into results so they appear immediately in feed and scan queue
+  useEffect(() => {
+    setResults((prevResults) => {
+      const existingMap = new Map(prevResults.map((r) => [r.domain.toLowerCase(), r]));
+      return sniMasterList.map((item) => {
+        const existing = existingMap.get(item.domain.toLowerCase());
+        if (existing) return existing;
+        return {
+          id: item.id,
+          domain: item.domain,
+          category: item.category,
+          ping: null,
+          downloadSpeed: null,
+          uploadSpeed: null,
+          fragmentationScore: null,
+          tlsVersion: null,
+          status: 'IDLE' as any,
+          packetLoss: 0,
+          jitter: 0,
+          httpStatus: 0
+        };
+      });
+    });
+  }, [sniMasterList]);
+
   // Modals State
   const [selectedSpeedTestSni, setSelectedSpeedTestSni] = useState<string | null>(null);
   const [selectedConfigSni, setSelectedConfigSni] = useState<string | null>(null);
@@ -214,21 +239,22 @@ export function App() {
     setIsScanning(true);
     abortControllerRef.current = new AbortController();
 
-    const initialResults: SniScanResult[] = activeQueue.map((item) => ({
-      id: item.id,
-      domain: item.domain,
-      category: item.category,
-      ping: null,
-      downloadSpeed: null,
-      uploadSpeed: null,
-      fragmentationScore: null,
-      tlsVersion: null,
-      status: 'IDLE' as any,
-      packetLoss: 0,
-      jitter: 0,
-      httpStatus: 0
-    }));
-    setResults(initialResults);
+    const activeSet = new Set(activeQueue.map((a) => a.domain.toLowerCase()));
+    setResults((prev) =>
+      prev.map((r) => {
+        if (activeSet.has(r.domain.toLowerCase())) {
+          return {
+            ...r,
+            status: 'IDLE' as any,
+            ping: null,
+            downloadSpeed: null,
+            uploadSpeed: null,
+            testedAt: undefined
+          };
+        }
+        return r;
+      })
+    );
 
     // Concurrency Worker Pool
     const queue = [...activeQueue];
