@@ -10,7 +10,7 @@
   }
 }
 
-/* Custom scrollbar for terminal/cyberpunk aesthetic */
+/* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -52,14 +52,14 @@
   animation: spin-slow 12s linear infinite;
 }
 
-/* ==========================================
-   LIGHT THEME OVERRIDES (تم روشن)
-   ========================================== */
+/* ==========================================================================
+   ELEGANT, SOFT, HIGH-CONTRAST LIGHT THEME (تم روشن فوق‌العاده شیک و چشم‌نواز)
+   ========================================================================== */
 
 html.light-theme,
 html.light-theme body {
-  background-color: #f1f5f9 !important; /* slate-100 */
-  color: #0f172a !important; /* slate-900 */
+  background-color: #f1f5f9 !important; /* Soft slate-100 (غیر زننده و ملایم) */
+  color: #0f172a !important; /* Crisp dark slate text */
 }
 
 /* Scrollbar for light theme */
@@ -67,49 +67,66 @@ html.light-theme ::-webkit-scrollbar-track {
   background: #e2e8f0;
 }
 html.light-theme ::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: #cbd5e1;
 }
 html.light-theme ::-webkit-scrollbar-thumb:hover {
   background: #0284c7;
 }
 
-/* Panel surface backgrounds in light theme */
-html.light-theme [class*="bg-[#07080D]"],
-html.light-theme [class*="bg-[#0A0B10]"],
-html.light-theme [class*="bg-[#0D0F16]"],
-html.light-theme [class*="bg-[#0B0F17]"],
-html.light-theme [class*="bg-[#0E1524]"],
-html.light-theme [class*="bg-[#080A10]"],
-html.light-theme [class*="bg-[#0D121F]"],
-html.light-theme [class*="bg-[#11131F]"],
-html.light-theme [class*="bg-[#0F172A]"],
-html.light-theme [class*="bg-[#0A0C13]"],
-html.light-theme [class*="bg-[#05060A]"],
-html.light-theme [class*="bg-[#0A0D14]"],
-html.light-theme [class*="bg-[#0D111A]"],
+/* 1. All main dark cards, panels, headers, sidebars & modals */
+html.light-theme aside,
+html.light-theme main,
+html.light-theme header,
+html.light-theme footer,
+html.light-theme nav,
 html.light-theme .bg-slate-900,
 html.light-theme .bg-slate-950,
-html.light-theme [class*="bg-slate-900"],
-html.light-theme [class*="bg-slate-950"] {
+html.light-theme .bg-slate-800,
+html.light-theme [class*="bg-[#0"] {
   background-color: #ffffff !important;
-}
-
-/* Secondary surface backgrounds */
-html.light-theme [class*="bg-cyan-950"],
-html.light-theme [class*="bg-slate-800"] {
-  background-color: #f8fafc !important;
-}
-
-/* Border overrides for light mode */
-html.light-theme [class*="border-cyan-900"],
-html.light-theme [class*="border-cyan-800"],
-html.light-theme [class*="border-cyan-500"],
-html.light-theme [class*="border-slate-800"],
-html.light-theme [class*="border-slate-700"] {
   border-color: #cbd5e1 !important; /* slate-300 */
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05) !important;
 }
 
-/* Text color contrast in light mode */
+/* 2. Inner sub-boxes, inputs, selects, fieldsets, textareas & code areas */
+html.light-theme textarea,
+html.light-theme input,
+html.light-theme select,
+html.light-theme fieldset,
+html.light-theme [class*="bg-[#050608]"],
+html.light-theme [class*="bg-[#05060A]"],
+html.light-theme [class*="bg-[#07090F]"],
+html.light-theme [class*="bg-[#0B0E17]"],
+html.light-theme [class*="bg-[#111624]"],
+html.light-theme [class*="bg-[#07080D]"],
+html.light-theme [class*="bg-cyan-950"],
+html.light-theme [class*="bg-black"],
+html.light-theme [class*="bg-slate-900"] {
+  background-color: #f8fafc !important; /* soft slate-50 */
+  color: #0f172a !important; /* dark slate font */
+  border-color: #cbd5e1 !important;
+}
+
+/* Placeholders in light mode */
+html.light-theme textarea::placeholder,
+html.light-theme input::placeholder {
+  color: #64748b !important; /* slate-500 */
+  opacity: 1 !important;
+}
+
+/* Config textarea text color */
+html.light-theme textarea {
+  color: #0284c7 !important; /* Sky-600 readable config font */
+  font-weight: 600 !important;
+}
+
+/* 3. Text Contrast Overrides */
+html.light-theme .text-white {
+  color: #0f172a !important; /* slate-900 */
+}
+html.light-theme .text-slate-200 {
+  color: #1e293b !important; /* slate-800 */
+}
 html.light-theme .text-slate-300 {
   color: #334155 !important; /* slate-700 */
 }
@@ -119,52 +136,76 @@ html.light-theme .text-slate-400 {
 html.light-theme .text-slate-500 {
   color: #64748b !important; /* slate-500 */
 }
-html.light-theme .text-slate-200 {
-  color: #1e293b !important; /* slate-800 */
-}
-html.light-theme .text-white {
-  color: #0f172a !important; /* slate-900 */
-}
 
-/* Accent texts in light mode */
-html.light-theme .text-cyan-400 {
+/* Accent Colors - High Contrast for Light Backgrounds */
+html.light-theme .text-cyan-400,
+html.light-theme .text-cyan-300,
+html.light-theme .text-cyan-200,
+html.light-theme .text-cyan-500 {
   color: #0284c7 !important; /* sky-600 */
 }
-html.light-theme .text-cyan-300 {
-  color: #0369a1 !important; /* sky-700 */
-}
-html.light-theme .text-cyan-200 {
-  color: #0c4a6e !important; /* sky-900 */
-}
-html.light-theme .text-emerald-400 {
+html.light-theme .text-emerald-400,
+html.light-theme .text-emerald-300,
+html.light-theme .text-green-400 {
   color: #059669 !important; /* emerald-600 */
 }
-html.light-theme .text-emerald-300 {
-  color: #047857 !important; /* emerald-700 */
+html.light-theme .text-amber-400,
+html.light-theme .text-amber-300 {
+  color: #d97706 !important; /* amber-600 */
+}
+html.light-theme .text-rose-400,
+html.light-theme .text-red-400 {
+  color: #e11d48 !important; /* rose-600 */
 }
 
-/* Form inputs & textareas */
-html.light-theme textarea,
-html.light-theme input[type="text"],
-html.light-theme input[type="number"],
-html.light-theme select {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+/* 4. Borders Across All Panels & Dividers */
+html.light-theme [class*="border-cyan-"],
+html.light-theme [class*="border-slate-"],
+html.light-theme div,
+html.light-theme button {
+  border-color: #cbd5e1;
 }
 
-/* Table rows in light mode */
-html.light-theme table tr:hover,
-html.light-theme tbody tr:hover {
-  background-color: #f1f5f9 !important;
+/* 5. Buttons & Badges Styling in Light Mode */
+html.light-theme .bg-cyan-950,
+html.light-theme [class*="bg-cyan-900"] {
+  background-color: #e0f2fe !important; /* sky-100 */
+  color: #0369a1 !important; /* sky-700 */
+  border-color: #bae6fd !important;
 }
 
-/* Modal Backdrops */
+/* Solid Action Buttons (like "اسکن هوشمند", "بروزرسانی آنلاین", "چسباندن") */
+html.light-theme button[class*="from-cyan-"],
+html.light-theme button[class*="bg-cyan-600"],
+html.light-theme button[class*="bg-cyan-500"],
+html.light-theme button[class*="from-emerald-"] {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.15) !important;
+}
+
+html.light-theme button[class*="from-cyan-"]:hover,
+html.light-theme button[class*="bg-cyan-600"]:hover {
+  background: #0369a1 !important;
+}
+
+/* Modal Backdrops & Overlays */
 html.light-theme [class*="bg-black/"] {
-  background-color: rgba(15, 23, 42, 0.5) !important;
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(4px);
 }
 
-/* Shadows in light mode */
-html.light-theme [class*="shadow-"] {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+/* Modal Dialog Windows */
+html.light-theme .bg-\[\#07090F\],
+html.light-theme .bg-\[\#07080D\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Gradient text fix in light mode */
+html.light-theme .bg-clip-text {
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: #0284c7 !important;
 }
