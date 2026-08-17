@@ -3,22 +3,22 @@ import { COMPLETE_WORLDWIDE_SNI_LIST } from './worldwideSniDatabase';
 
 export const NETWORK_PROFILES: NetworkProfile[] = [
   {
-    id: 'mci',
-    name: 'MCI / Hamrah-e Aval',
-    nameFa: 'همراه اول (MCI)',
-    asn: 'AS44244',
-    defaultMtu: 1450,
-    recommendedFrag: '1-3, 5-10ms (TLS Hello)',
-    color: '#06b6d4'
-  },
-  {
     id: 'irancell',
     name: 'MTN Irancell',
     nameFa: 'ایرانسل (MTN)',
-    asn: 'AS44337',
+    asn: 'AS44244',
     defaultMtu: 1420,
     recommendedFrag: '2-5, 8-15ms (SNI Split)',
     color: '#eab308'
+  },
+  {
+    id: 'mci',
+    name: 'MCI / Hamrah-e Aval',
+    nameFa: 'همراه اول (MCI)',
+    asn: 'AS197207',
+    defaultMtu: 1450,
+    recommendedFrag: '1-3, 5-10ms (TLS Hello)',
+    color: '#06b6d4'
   },
   {
     id: 'rightel',
@@ -60,7 +60,7 @@ export const NETWORK_PROFILES: NetworkProfile[] = [
     id: 'asiatech',
     name: 'Asiatech ADSL / VDSL',
     nameFa: 'آسیاتک (Asiatech)',
-    asn: 'AS43754',
+    asn: 'AS16322',
     defaultMtu: 1492,
     recommendedFrag: '1-3, 5-12ms',
     color: '#ec4899'

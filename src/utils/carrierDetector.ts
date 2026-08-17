@@ -33,8 +33,18 @@ export const CARRIER_SIGNATURES: {
     id: 'irancell',
     name: 'MTN Irancell',
     nameFa: 'ایرانسل (MTN)',
-    asns: ['AS44337', 'AS51074', 'AS202447', 'AS208005'],
-    keywords: ['irancell', 'mtn', 'iran cell', 'mtnirancell', 'mtn irancell', 'mtn-irancell', 'cellular', 'mtn-ir'],
+    asns: ['AS44244', 'AS51074', 'AS202447', 'AS208005', 'AS43754'],
+    keywords: [
+      'irancell',
+      'mtn',
+      'iran cell',
+      'mtnirancell',
+      'mtn irancell',
+      'mtn-irancell',
+      'mtn-ir',
+      'irancell telecommunications',
+      'mtn irancell telecommunications'
+    ],
     color: '#eab308',
     defaultMtu: 1420,
     recommendedFrag: '2-5, 8-15ms (SNI Split)',
@@ -44,7 +54,7 @@ export const CARRIER_SIGNATURES: {
     id: 'mci',
     name: 'MCI / Hamrah-e Aval',
     nameFa: 'همراه اول (MCI)',
-    asns: ['AS44244', 'AS197207', 'AS208331', 'AS208004'],
+    asns: ['AS197207', 'AS208331', 'AS208004'],
     keywords: [
       'mobile telecommunication company of iran',
       'mci',
@@ -56,7 +66,8 @@ export const CARRIER_SIGNATURES: {
       'ir-mci',
       'irmci',
       'mci.ir',
-      'hamraheaval'
+      'hamraheaval',
+      'mobile telecommunication'
     ],
     color: '#06b6d4',
     defaultMtu: 1450,
@@ -78,7 +89,7 @@ export const CARRIER_SIGNATURES: {
     id: 'shatel',
     name: 'Shatel ADSL / VDSL / Mobile',
     nameFa: 'شاتل (Shatel)',
-    asns: ['AS31549', 'AS43754', 'AS205647', 'AS201314'],
+    asns: ['AS31549', 'AS205647', 'AS201314'],
     keywords: ['shatel', 'arya rasaneh', 'shatel mobile', 'shatelmobile'],
     color: '#3b82f6',
     defaultMtu: 1492,
@@ -89,7 +100,7 @@ export const CARRIER_SIGNATURES: {
     id: 'mokhaberat',
     name: 'TCI / Mokhaberat Iran',
     nameFa: 'مخابرات ایران (TCI)',
-    asns: ['AS12880', 'AS48159', 'AS49666', 'AS25184', 'AS58224', 'AS207521'],
+    asns: ['AS58224', 'AS12880', 'AS48159', 'AS49666', 'AS25184', 'AS207521'],
     keywords: ['mokhaberat', 'tci', 'telecommunication company of iran', 'tic', 'dci', 'khuzestan telecommunication'],
     color: '#10b981',
     defaultMtu: 1480,
@@ -150,10 +161,9 @@ export function matchIranianCarrierByIp(ip: string): { id: string; name: string;
 
   const [a, b] = parts;
 
-  // 1. Irancell Range Check (Comprehensive ranges for MTN Irancell 4G/5G/TD-LTE)
+  // 1. Irancell Range Check (MTN Irancell 4G/5G/TD-LTE)
   if (
-    (a === 5 && b >= 200 && b <= 223) ||
-    (a === 5 && b >= 160 && b <= 175) ||
+    (a === 5 && b >= 160 && b <= 223) ||
     (a === 31 && (b === 171 || (b >= 56 && b <= 59) || (b >= 168 && b <= 175))) ||
     (a === 37 && (b === 110 || b === 111 || b === 202 || b === 203)) ||
     (a === 85 && (b === 133 || b === 185 || b === 155)) ||
@@ -163,23 +173,22 @@ export function matchIranianCarrierByIp(ip: string): { id: string; name: string;
     (a === 94 && b === 101) ||
     (a === 178 && b === 131)
   ) {
-    return { id: 'irancell', name: 'MTN Irancell', nameFa: 'ایرانسل (MTN)', asn: 'AS44337' };
+    return { id: 'irancell', name: 'MTN Irancell', nameFa: 'ایرانسل (MTN)', asn: 'AS44244' };
   }
 
-  // 2. MCI Range Check
+  // 2. MCI Range Check (Hamrah-e Aval)
   if (
-    (a === 2 && b >= 176 && b <= 179) ||
-    (a === 2 && b === 147) ||
+    (a === 2 && ((b >= 144 && b <= 151) || (b >= 176 && b <= 179))) ||
     (a === 5 && b >= 112 && b <= 127) ||
     (a === 37 && b >= 156 && b <= 159) ||
     (a === 80 && b === 191) ||
     (a === 176 && b === 101) ||
     (a === 188 && (b === 158 || b === 159 || b === 245)) ||
-    (a === 31 && (b === 2 || b === 7)) ||
+    (a === 31 && (b === 2 || b === 3 || b === 7)) ||
     (a === 46 && (b === 224 || b === 225)) ||
     (a === 91 && b === 243)
   ) {
-    return { id: 'mci', name: 'MCI / Hamrah-e Aval', nameFa: 'همراه اول (MCI)', asn: 'AS44244' };
+    return { id: 'mci', name: 'MCI / Hamrah-e Aval', nameFa: 'همراه اول (MCI)', asn: 'AS197207' };
   }
 
   // 3. Rightel Range Check
