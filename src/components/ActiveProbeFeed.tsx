@@ -29,6 +29,7 @@ import {
   Terminal,
   Trash2
 } from 'lucide-react';
+import { CyberSelect, SelectOption } from './CyberSelect';
 
 interface ActiveProbeFeedProps {
   results: SniScanResult[];
@@ -67,7 +68,6 @@ export function ActiveProbeFeed({
   onOpenSpeedTest,
   onApplySniToConfig,
   onExportSnis,
-  onTestWithXray,
   onFetchGlobalStream,
   onOpenSpeedFilterModal,
   isStreamingGlobal = false,
@@ -82,7 +82,6 @@ export function ActiveProbeFeed({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CLEAN' | 'THROTTLED' | 'BLOCKED'>('ALL');
   const [activeCategoryChip, setActiveCategoryChip] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'ping' | 'download' | 'upload' | 'domain'>('ping');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedLogs, setCopiedLogs] = useState<boolean>(false);
   const [logFilter, setLogFilter] = useState<'ALL' | 'INJECT' | 'CLEAN' | 'BLOCKED'>('ALL');
@@ -175,27 +174,43 @@ export function ActiveProbeFeed({
         return matchesCategory && matchesSearch && matchesStatus && matchesSpeed;
       })
       .sort((a, b) => {
-        let valA: any = a[sortBy] ?? 9999;
-        let valB: any = b[sortBy] ?? 9999;
-
         if (sortBy === 'domain') {
-          return sortOrder === 'asc' ? a.domain.localeCompare(b.domain) : b.domain.localeCompare(a.domain);
+          return a.domain.localeCompare(b.domain);
         }
 
-        // Numerical sorting
+        // Sorting by lowest ping first (Fastest response)
         if (sortBy === 'ping') {
-          if (valA === null || valA === 0) valA = 99999;
-          if (valB === null || valB === 0) valB = 99999;
-          return sortOrder === 'asc' ? valA - valB : valB - valA;
+          const aHasPing = a.ping !== null && a.ping > 0 && a.status !== 'BLOCKED' && a.status !== 'TIMEOUT';
+          const bHasPing = b.ping !== null && b.ping > 0 && b.status !== 'BLOCKED' && b.status !== 'TIMEOUT';
+          if (aHasPing && !bHasPing) return -1;
+          if (!aHasPing && bHasPing) return 1;
+
+          const valA = a.ping !== null && a.ping > 0 ? a.ping : 999999;
+          const valB = b.ping !== null && b.ping > 0 ? b.ping : 999999;
+          return valA - valB;
         }
 
-        if (sortBy === 'download' || sortBy === 'upload') {
-          return sortOrder === 'desc' ? (valA || 0) - (valB || 0) : (valB || 0) - (valA || 0);
+        // Sorting by highest download speed first
+        if (sortBy === 'download') {
+          const dlA = a.downloadSpeed ?? 0;
+          const dlB = b.downloadSpeed ?? 0;
+          if (dlA > 0 && dlB <= 0) return -1;
+          if (dlA <= 0 && dlB > 0) return 1;
+          return dlB - dlA;
+        }
+
+        // Sorting by highest upload speed first
+        if (sortBy === 'upload') {
+          const ulA = a.uploadSpeed ?? 0;
+          const ulB = b.uploadSpeed ?? 0;
+          if (ulA > 0 && ulB <= 0) return -1;
+          if (ulA <= 0 && ulB > 0) return 1;
+          return ulB - ulA;
         }
 
         return 0;
       });
-  }, [results, searchQuery, statusFilter, activeCategoryChip, minDownloadFilter, minUploadFilter, sortBy, sortOrder]);
+  }, [results, searchQuery, statusFilter, activeCategoryChip, minDownloadFilter, minUploadFilter, sortBy]);
 
   // Reset current page when filters change
   useEffect(() => {
@@ -265,6 +280,39 @@ export function ActiveProbeFeed({
         );
     }
   };
+
+  const sortOptions: SelectOption<string>[] = [
+    { value: 'ping', label: lang === 'fa' ? 'کمترین پینگ (Fastest)' : 'Lowest Ping', badge: lang === 'fa' ? 'سریع‌ترین زمان پاسخ' : 'Lowest Latency' },
+    { value: 'download', label: lang === 'fa' ? 'بیشترین دانلود (Download)' : 'Highest Download', badge: lang === 'fa' ? 'بیشترین مگابایت دانلود' : 'Max Download' },
+    { value: 'upload', label: lang === 'fa' ? 'بیشترین آپلود (Upload)' : 'Highest Upload', badge: lang === 'fa' ? 'بیشترین مگابایت آپلود' : 'Max Upload' },
+    { value: 'domain', label: lang === 'fa' ? 'نام دامنه (A-Z)' : 'Domain Name', badge: lang === 'fa' ? 'ترتیب الفبا' : 'Alphabetical' },
+  ];
+
+  const pageSizeOptions: SelectOption<number>[] = [
+    { value: 25, label: '25', badge: lang === 'fa' ? '۲۵ مورد' : '25 items' },
+    { value: 50, label: '50', badge: lang === 'fa' ? '۵۰ مورد' : '50 items' },
+    { value: 100, label: '100', badge: lang === 'fa' ? '۱۰۰ مورد' : '100 items' },
+    { value: 250, label: '250', badge: lang === 'fa' ? '۲۵۰ مورد' : '250 items' },
+    { value: 500, label: '500', badge: lang === 'fa' ? '۵۰۰ مورد' : '500 items' },
+    { value: 10000, label: lang === 'fa' ? 'همه (All)' : 'All', badge: lang === 'fa' ? 'تمام لیست' : 'Full List' },
+  ];
+
+  const minDownloadOptions: SelectOption<number>[] = [
+    { value: 0, label: lang === 'fa' ? 'همه سرعت‌ها' : 'All Speeds (0 Mbps)' },
+    { value: 1, label: '≥ 1.0 Mbps' },
+    { value: 3, label: '≥ 3.0 Mbps' },
+    { value: 5, label: '≥ 5.0 Mbps' },
+    { value: 10, label: '≥ 10.0 Mbps' },
+    { value: 20, label: '≥ 20.0 Mbps' },
+  ];
+
+  const minUploadOptions: SelectOption<number>[] = [
+    { value: 0, label: lang === 'fa' ? 'همه سرعت‌ها' : 'All Speeds (0 Mbps)' },
+    { value: 0.5, label: '≥ 0.5 Mbps' },
+    { value: 1.0, label: '≥ 1.0 Mbps' },
+    { value: 2.0, label: '≥ 2.0 Mbps' },
+    { value: 5.0, label: '≥ 5.0 Mbps' },
+  ];
 
   return (
     <section className="flex flex-col w-full bg-[#0A0B10] text-slate-300 font-mono rounded-xl border border-cyan-900/30 shadow-xl overflow-hidden">
@@ -489,56 +537,32 @@ export function ActiveProbeFeed({
             )}
           </button>
 
-          {/* Page Size Selector */}
-          <div className="flex items-center gap-1 text-xs text-slate-400 bg-[#050608] border border-slate-800 px-2 py-1 rounded-lg">
+          {/* Page Size Selector with CyberSelect */}
+          <div className="flex items-center gap-1 text-xs text-slate-400">
             <span className="text-[10px] text-slate-500 uppercase">{lang === 'fa' ? 'نمایش:' : 'Show:'}</span>
-            <select
+            <CyberSelect
               value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="bg-transparent text-cyan-300 text-xs font-mono focus:outline-none cursor-pointer"
-            >
-              <option value={25} className="bg-[#0D0F16]">25</option>
-              <option value={50} className="bg-[#0D0F16]">50</option>
-              <option value={100} className="bg-[#0D0F16]">100</option>
-              <option value={250} className="bg-[#0D0F16]">250</option>
-              <option value={500} className="bg-[#0D0F16]">500</option>
-              <option value={10000} className="bg-[#0D0F16]">{lang === 'fa' ? 'همه (All)' : 'All'}</option>
-            </select>
+              onChange={(val) => setPageSize(Number(val))}
+              options={pageSizeOptions}
+              title={lang === 'fa' ? 'تعداد دامنه‌ها در هر صفحه' : 'Select Page Size'}
+            />
           </div>
 
-          {/* Sort Selector */}
-          <div className="flex items-center gap-1 text-xs text-slate-400 bg-[#050608] border border-slate-800 px-2 py-1 rounded-lg">
-            <ArrowUpDown className="w-3.5 h-3.5 text-cyan-400" />
-            <select
+          {/* Sort Selector with CyberSelect */}
+          <div className="flex items-center gap-1 text-xs text-slate-400">
+            <CyberSelect
               value={sortBy}
-              onChange={(e) => {
-                const val = e.target.value as any;
-                setSortBy(val);
-                if (val === 'download' || val === 'upload') setSortOrder('desc');
-                else setSortOrder('asc');
-              }}
-              className="bg-transparent text-slate-300 text-xs font-mono focus:outline-none cursor-pointer"
-            >
-              <option value="ping" className="bg-[#0D0F16]">
-                {lang === 'fa' ? 'کمترین پینگ (Fastest)' : 'Lowest Ping'}
-              </option>
-              <option value="download" className="bg-[#0D0F16]">
-                {lang === 'fa' ? 'بیشترین دانلود (Download)' : 'Highest Download'}
-              </option>
-              <option value="upload" className="bg-[#0D0F16]">
-                {lang === 'fa' ? 'بیشترین آپلود (Upload)' : 'Highest Upload'}
-              </option>
-              <option value="domain" className="bg-[#0D0F16]">
-                {lang === 'fa' ? 'نام دامنه (A-Z)' : 'Domain Name'}
-              </option>
-            </select>
+              onChange={(val) => setSortBy(val as any)}
+              options={sortOptions}
+              title={lang === 'fa' ? 'مرتب‌سازی نتایج بر اساس' : 'Sort Results By'}
+            />
           </div>
 
           {/* Export Injected Configs */}
           <button
             onClick={() => onExportSnis(filteredResults.filter((r) => r.status === 'CLEAN'), 'vless')}
             title="Export Clean Injected VLESS Configs"
-            className="flex items-center gap-1.5 px-3 py-1 bg-cyan-950/90 border border-cyan-700 hover:border-cyan-400 text-cyan-300 hover:text-white rounded-lg text-xs transition-all cursor-pointer font-semibold shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-950/90 border border-cyan-700 hover:border-cyan-400 text-cyan-300 hover:text-white rounded-lg text-xs transition-all cursor-pointer font-semibold shadow-sm"
           >
             <Download className="w-3.5 h-3.5 text-cyan-400" />
             <span>{lang === 'fa' ? 'خروجی سالم‌ها (VLESS)' : 'Export Clean'}</span>
@@ -558,34 +582,23 @@ export function ActiveProbeFeed({
             {/* Min Download */}
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400 text-[11px]">{lang === 'fa' ? 'حداقل دانلود:' : 'Min DL:'}</span>
-              <select
+              <CyberSelect
                 value={minDownloadFilter}
-                onChange={(e) => setMinDownloadFilter(Number(e.target.value))}
-                className="bg-[#121622] border border-emerald-700/80 rounded px-2 py-0.5 text-emerald-300 text-xs font-mono focus:outline-none"
-              >
-                <option value={0}>{lang === 'fa' ? 'همه سرعت‌ها (بدون محدودیت)' : 'No Limit (0 Mbps)'}</option>
-                <option value={1}>≥ 1.0 Mbps</option>
-                <option value={3}>≥ 3.0 Mbps</option>
-                <option value={5}>≥ 5.0 Mbps</option>
-                <option value={10}>≥ 10.0 Mbps</option>
-                <option value={20}>≥ 20.0 Mbps</option>
-              </select>
+                onChange={(val) => setMinDownloadFilter(Number(val))}
+                options={minDownloadOptions}
+                title={lang === 'fa' ? 'حداقل سرعت دانلود' : 'Minimum Download Speed'}
+              />
             </div>
 
             {/* Min Upload */}
             <div className="flex items-center gap-1.5">
               <span className="text-slate-400 text-[11px]">{lang === 'fa' ? 'حداقل آپلود:' : 'Min UL:'}</span>
-              <select
+              <CyberSelect
                 value={minUploadFilter}
-                onChange={(e) => setMinUploadFilter(Number(e.target.value))}
-                className="bg-[#121622] border border-cyan-700/80 rounded px-2 py-0.5 text-cyan-300 text-xs font-mono focus:outline-none"
-              >
-                <option value={0}>{lang === 'fa' ? 'همه سرعت‌ها (بدون محدودیت)' : 'No Limit (0 Mbps)'}</option>
-                <option value={0.5}>≥ 0.5 Mbps</option>
-                <option value={1.0}>≥ 1.0 Mbps</option>
-                <option value={2.0}>≥ 2.0 Mbps</option>
-                <option value={5.0}>≥ 5.0 Mbps</option>
-              </select>
+                onChange={(val) => setMinUploadFilter(Number(val))}
+                options={minUploadOptions}
+                title={lang === 'fa' ? 'حداقل سرعت آپلود' : 'Minimum Upload Speed'}
+              />
             </div>
 
             {(minDownloadFilter > 0 || minUploadFilter > 0) && (
@@ -609,7 +622,7 @@ export function ActiveProbeFeed({
         </div>
       )}
 
-      {/* 5. Realtime Results Table (Seamless, Naturally Flowing into Page Scroll) */}
+      {/* 5. Realtime Results Table */}
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left border-collapse select-text">
           <thead className="bg-[#0D0F16] border-b border-slate-800">
@@ -631,8 +644,8 @@ export function ActiveProbeFeed({
                     <Filter className="w-8 h-8 text-slate-700" />
                     <span>
                       {lang === 'fa'
-                        ? 'هیچ نتیجه‌ای یافت نشد. دکمه "دریافت زنده دامنه‌ها" یا "شروع اسکن آنلاین" را بزنید.'
-                        : 'No SNI matches the current filter. Press "Stream Global SNIs" or "Initialize Scanner".'}
+                        ? 'هیچ نتیجه‌ای با فیلتر انتخابی یافت نشد.'
+                        : 'No SNI matches the current filter.'}
                     </span>
                   </div>
                 </td>
@@ -659,7 +672,7 @@ export function ActiveProbeFeed({
 
                     {/* Ping */}
                     <td className="py-3 px-3">
-                      {item.ping !== null ? (
+                      {item.ping !== null && item.ping > 0 ? (
                         <div className="flex items-center gap-2">
                           <span
                             className={`font-semibold ${
@@ -697,7 +710,7 @@ export function ActiveProbeFeed({
 
                     {/* Download Speed */}
                     <td className="py-3 px-3">
-                      {item.downloadSpeed !== null ? (
+                      {item.downloadSpeed !== null && item.downloadSpeed > 0 ? (
                         <span
                           className={`font-bold ${
                             item.downloadSpeed > 15
@@ -718,7 +731,7 @@ export function ActiveProbeFeed({
 
                     {/* Upload Speed */}
                     <td className="py-3 px-3">
-                      {item.uploadSpeed !== null ? (
+                      {item.uploadSpeed !== null && item.uploadSpeed > 0 ? (
                         <span className="text-slate-300 font-medium">
                           {item.uploadSpeed} <span className="text-[10px] text-slate-500 font-normal">Mbps</span>
                         </span>
@@ -750,7 +763,7 @@ export function ActiveProbeFeed({
                       {getStatusBadge(item.status)}
                     </td>
 
-                    {/* Actions: 1-Click Xray Engine / Speedtest / Copy / Inject */}
+                    {/* Actions */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* 1-Click Direct Copy Injected Config */}
@@ -802,11 +815,11 @@ export function ActiveProbeFeed({
                 ? `نمایش ${(currentPage - 1) * pageSize + 1} تا ${Math.min(
                     currentPage * pageSize,
                     filteredResults.length
-                  )} از ${filteredResults.length} دامنه فیلترشده (${results.length} در حافظه)`
+                  )} از ${filteredResults.length} دامنه (${results.length} کل دامنه‌ها)`
                 : `Showing ${(currentPage - 1) * pageSize + 1} - ${Math.min(
                     currentPage * pageSize,
                     filteredResults.length
-                  )} of ${filteredResults.length} filtered items (${results.length} in memory)`}
+                  )} of ${filteredResults.length} filtered items (${results.length} total in memory)`}
             </span>
           </div>
 

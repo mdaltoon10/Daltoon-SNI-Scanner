@@ -17,7 +17,7 @@ import {
   ClipboardCheck,
   Trash2
 } from 'lucide-react';
-
+import { CyberSelect, SelectOption } from './CyberSelect';
 import { safeReadClipboard } from '../utils/clipboard';
 
 interface SidebarProps {
@@ -66,13 +66,43 @@ export function Sidebar({
       setPasteSuccess(true);
       setTimeout(() => setPasteSuccess(false), 2000);
     } else {
-      // Focus textarea so Android/iOS keyboard clipboard bar is immediately available
       if (textareaRef.current) {
         textareaRef.current.focus();
         textareaRef.current.select();
       }
     }
   };
+
+  const categoryOptions: SelectOption<string>[] = [
+    { value: 'all', label: lang === 'fa' ? 'همه دامنه‌ها (All SNIs)' : 'All SNIs (Full Pool)', badge: 'TLS 1.3' },
+    { value: 'yahoo', label: 'Yahoo & Search Portals (www.yahoo.com)', badge: 'High Stability' },
+    { value: 'cloudflare', label: 'Cloudflare Edge & Workers', badge: 'CDN Edge' },
+    { value: 'microsoft', label: 'Microsoft / Skype / Teams', badge: 'Enterprise' },
+    { value: 'spotify', label: 'Spotify / Discord / Media', badge: 'Streaming' },
+    { value: 'amazon_fastly', label: 'Amazon AWS & Fastly CDNs', badge: 'Global' },
+    { value: 'dev_github', label: 'GitHub & Developer CDNs', badge: 'Dev' },
+    { value: 'general', label: 'Apple & Global Edge CDNs', badge: 'Worldwide' },
+    { value: 'custom', label: lang === 'fa' ? 'دامنه‌های آنلاین و دستی' : 'Online / Custom Imported', badge: 'Custom' },
+  ];
+
+  const concurrencyOptions: SelectOption<number>[] = [
+    { value: 4, label: '4 Threads', badge: lang === 'fa' ? 'سبک / گوشی‌های ضعیف‌تر' : 'Low CPU' },
+    { value: 8, label: '8 Threads', badge: lang === 'fa' ? 'پیش‌فرض استاندارد' : 'Standard' },
+    { value: 16, label: '16 Threads', badge: lang === 'fa' ? 'سرعت بالا' : 'Fast' },
+    { value: 32, label: '32 Threads', badge: lang === 'fa' ? 'فوق سریع توربو' : 'Turbo' },
+  ];
+
+  const payloadOptions: SelectOption<number>[] = [
+    { value: 2, label: '2 MB Fast', badge: lang === 'fa' ? 'تست سریع' : 'Fast Probe' },
+    { value: 5, label: '5 MB Standard', badge: lang === 'fa' ? 'تست استاندارد' : 'Standard' },
+    { value: 10, label: '10 MB Deep', badge: lang === 'fa' ? 'تست دقیق و عمیق' : 'Deep Accurate' },
+  ];
+
+  const timeoutOptions: SelectOption<number>[] = [
+    { value: 2500, label: '2500 ms', badge: lang === 'fa' ? 'سریع' : 'Fast' },
+    { value: 3500, label: '3500 ms', badge: lang === 'fa' ? 'استاندارد' : 'Balanced' },
+    { value: 5000, label: '5000 ms', badge: lang === 'fa' ? 'شبکه‌های کند' : 'Slow Network' },
+  ];
 
   return (
     <aside className="bg-[#0D0F16] border border-cyan-900/30 rounded-xl p-4 sm:p-5 flex flex-col gap-5 text-slate-300 font-mono shadow-xl lg:sticky lg:top-20">
@@ -233,30 +263,22 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* 3. Category Selector */}
+      {/* 3. Category Selector with CyberSelect */}
       <div>
         <label className="text-[10px] uppercase text-slate-400 font-semibold mb-2 block tracking-widest flex items-center gap-1.5">
           <Sliders className="w-3.5 h-3.5 text-cyan-400" />
           {lang === 'fa' ? 'فیلتر دسته‌بندی SNI' : 'SNI Category Pool'}
         </label>
-        <select
+        <CyberSelect
           value={parameters.category}
-          onChange={(e) => onChangeParameters({ ...parameters, category: e.target.value })}
-          className="w-full bg-[#050608] border border-cyan-900/40 rounded px-3 py-2 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400 transition-colors cursor-pointer"
-        >
-          <option value="all">{lang === 'fa' ? 'همه دامنه‌ها (All SNIs)' : 'All SNIs (Full Pool)'}</option>
-          <option value="yahoo">Yahoo & Search Portals (www.yahoo.com)</option>
-          <option value="cloudflare">Cloudflare Edge & Workers</option>
-          <option value="microsoft">Microsoft / Skype / Teams</option>
-          <option value="spotify">Spotify / Discord / Media</option>
-          <option value="amazon_fastly">Amazon AWS & Fastly CDNs</option>
-          <option value="dev_github">GitHub & Developer CDNs</option>
-          <option value="general">Apple & Global Edge CDNs</option>
-          <option value="custom">{lang === 'fa' ? 'دامنه‌های آنلاین و دستی' : 'Online / Custom Imported'}</option>
-        </select>
+          onChange={(val) => onChangeParameters({ ...parameters, category: val as string })}
+          options={categoryOptions}
+          title={lang === 'fa' ? 'انتخاب دسته‌بندی دامنه‌های SNI' : 'Select SNI Category Pool'}
+          variant="full"
+        />
       </div>
 
-      {/* 4. Scan Parameters Accordion / List */}
+      {/* 4. Scan Parameters with CyberSelect */}
       <div>
         <label className="text-[10px] uppercase text-slate-400 font-semibold mb-2 block tracking-widest flex items-center gap-1.5">
           <Settings2 className="w-3.5 h-3.5 text-cyan-400" />
@@ -266,44 +288,34 @@ export function Sidebar({
           {/* Concurrency */}
           <div className="flex justify-between items-center pb-2 border-b border-slate-800/60">
             <span className="text-xs text-slate-400">{lang === 'fa' ? 'همزمانی (Threads)' : 'Concurrency'}</span>
-            <select
+            <CyberSelect
               value={parameters.concurrency}
-              onChange={(e) => onChangeParameters({ ...parameters, concurrency: Number(e.target.value) })}
-              className="bg-[#0D0F16] border border-cyan-900/60 rounded px-2 py-0.5 text-xs text-cyan-400 font-mono cursor-pointer"
-            >
-              <option value={4}>4 Threads</option>
-              <option value={8}>8 Threads</option>
-              <option value={16}>16 Threads</option>
-              <option value={32}>32 Threads</option>
-            </select>
+              onChange={(val) => onChangeParameters({ ...parameters, concurrency: Number(val) })}
+              options={concurrencyOptions}
+              title={lang === 'fa' ? 'انتخاب تعداد نخ‌های پردازش همزمان' : 'Select Concurrency Threads'}
+            />
           </div>
 
           {/* Test Payload Size */}
           <div className="flex justify-between items-center pb-2 border-b border-slate-800/60">
             <span className="text-xs text-slate-400">{lang === 'fa' ? 'حجم تست اسپیدتست' : 'Speedtest Payload'}</span>
-            <select
+            <CyberSelect
               value={parameters.testPayloadMb}
-              onChange={(e) => onChangeParameters({ ...parameters, testPayloadMb: Number(e.target.value) })}
-              className="bg-[#0D0F16] border border-cyan-900/60 rounded px-2 py-0.5 text-xs text-cyan-400 font-mono cursor-pointer"
-            >
-              <option value={2}>2 MB Fast</option>
-              <option value={5}>5 MB Standard</option>
-              <option value={10}>10 MB Deep</option>
-            </select>
+              onChange={(val) => onChangeParameters({ ...parameters, testPayloadMb: Number(val) })}
+              options={payloadOptions}
+              title={lang === 'fa' ? 'حجم فایل تست دانلود و آپلود' : 'Select Speedtest Payload Size'}
+            />
           </div>
 
           {/* Timeout */}
           <div className="flex justify-between items-center">
             <span className="text-xs text-slate-400">{lang === 'fa' ? 'تایم‌اوت پروب' : 'Timeout'}</span>
-            <select
+            <CyberSelect
               value={parameters.timeoutMs}
-              onChange={(e) => onChangeParameters({ ...parameters, timeoutMs: Number(e.target.value) })}
-              className="bg-[#0D0F16] border border-cyan-900/60 rounded px-2 py-0.5 text-xs text-cyan-400 font-mono cursor-pointer"
-            >
-              <option value={2500}>2500 ms</option>
-              <option value={3500}>3500 ms</option>
-              <option value={5000}>5000 ms</option>
-            </select>
+              onChange={(val) => onChangeParameters({ ...parameters, timeoutMs: Number(val) })}
+              options={timeoutOptions}
+              title={lang === 'fa' ? 'حداکثر زمان انتظار پاسخ پروب' : 'Select Probe Timeout'}
+            />
           </div>
         </div>
       </div>

@@ -596,7 +596,7 @@ export function App() {
               targetCfg = `vless://d2c18400-6c9a-4c28-98e3-0d33b5c19208@104.16.12.34:443?security=tls&encryption=none&headerType=none&type=tcp&sni=${sni}#Iran-SNI-${sni}`;
             }
             setRawConfig(targetCfg);
-            setActiveTab('xray_engine');
+            setSelectedConfigSni(sni);
           }}
           onOpenSpeedTest={(sni) => setSelectedSpeedTestSni(sni)}
           onExportSnis={handleExportSnis}

@@ -23,6 +23,7 @@ import {
   ChevronUp,
   X
 } from 'lucide-react';
+import { CyberSelect, SelectOption } from './CyberSelect';
 
 interface CleanSpeedFilterModalProps {
   isOpen: boolean;
@@ -114,7 +115,7 @@ export function CleanSpeedFilterModal({
   const qualifiedList = useMemo(() => {
     return results
       .filter((r) => {
-        if (r.status === 'IDLE' || r.status === 'TESTING' || r.status === 'BLOCKED') return false;
+        if (r.status === 'IDLE' || r.status === 'TESTING' || r.status === 'BLOCKED' || r.status === 'TIMEOUT') return false;
 
         const dl = r.downloadSpeed || 0;
         const up = r.uploadSpeed || 0;
@@ -167,10 +168,11 @@ export function CleanSpeedFilterModal({
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  // Mathematical percentage calculations for accurate slider label markers
-  const dlPercentage = Math.min(100, Math.max(0, ((minDownloadMbps - 0.5) / (50 - 0.5)) * 100));
-  const upPercentage = Math.min(100, Math.max(0, ((minUploadMbps - 0.2) / (20 - 0.2)) * 100));
-  const pingPercentage = Math.min(100, Math.max(0, ((maxPingMs - 50) / (600 - 50)) * 100));
+  const sortOptions: SelectOption<'download' | 'upload' | 'ping'>[] = [
+    { value: 'download', label: lang === 'fa' ? 'بیشترین دانلود' : 'Top Download', badge: 'Download' },
+    { value: 'upload', label: lang === 'fa' ? 'بیشترین آپلود' : 'Top Upload', badge: 'Upload' },
+    { value: 'ping', label: lang === 'fa' ? 'کمترین پینگ' : 'Lowest Ping', badge: 'Ping' },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md font-mono animate-fadeIn select-text overflow-y-auto">
@@ -186,8 +188,8 @@ export function CleanSpeedFilterModal({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">
                   {lang === 'fa'
-                    ? 'لیست دامنه های سفارسی و تنظیم مقدار دانلود/اپلود اسپید تست'
-                    : 'Custom Domains List & Speedtest Up/Down Config'}
+                    ? 'لیست دامنه‌های سالم و تنظیم سرعت دانلود/آپلود'
+                    : 'Clean Domains & Speed Filter'}
                 </h3>
                 <span className="text-[11px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-700/80 px-2 py-0.5 rounded-full font-bold">
                   {qualifiedList.length} {lang === 'fa' ? 'مورد سالم' : 'Qualified'}
@@ -252,7 +254,7 @@ export function CleanSpeedFilterModal({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* 1. Min Download Slider (Linear with calibrated exact percentage ticks) */}
+                {/* 1. Min Download Slider */}
                 <div className="bg-[#121622] p-3 rounded-xl border border-slate-700/80 flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
@@ -275,7 +277,6 @@ export function CleanSpeedFilterModal({
                       className="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-800 rounded-lg appearance-none"
                     />
 
-                    {/* Mathematically Aligned Milestone Labels */}
                     <div className="relative h-4 mt-1 text-[9px] text-slate-500 font-mono select-none">
                       <span className="absolute left-0 transform">0.5M</span>
                       <span
@@ -301,7 +302,7 @@ export function CleanSpeedFilterModal({
                   </div>
                 </div>
 
-                {/* 2. Min Upload Slider (Linear with calibrated exact percentage ticks) */}
+                {/* 2. Min Upload Slider */}
                 <div className="bg-[#121622] p-3 rounded-xl border border-slate-700/80 flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
@@ -324,7 +325,6 @@ export function CleanSpeedFilterModal({
                       className="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-800 rounded-lg appearance-none"
                     />
 
-                    {/* Mathematically Aligned Milestone Labels */}
                     <div className="relative h-4 mt-1 text-[9px] text-slate-500 font-mono select-none">
                       <span className="absolute left-0 transform">0.2M</span>
                       <span
@@ -350,7 +350,7 @@ export function CleanSpeedFilterModal({
                   </div>
                 </div>
 
-                {/* 3. Max Ping Slider (Linear with calibrated exact percentage ticks) */}
+                {/* 3. Max Ping Slider */}
                 <div className="bg-[#121622] p-3 rounded-xl border border-slate-700/80 flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-slate-400 flex items-center gap-1">
@@ -373,7 +373,6 @@ export function CleanSpeedFilterModal({
                       className="w-full accent-yellow-400 cursor-pointer h-2 bg-slate-800 rounded-lg appearance-none"
                     />
 
-                    {/* Mathematically Aligned Milestone Labels */}
                     <div className="relative h-4 mt-1 text-[9px] text-slate-500 font-mono select-none">
                       <span className="absolute left-0 transform">50ms</span>
                       <span
@@ -448,17 +447,14 @@ export function CleanSpeedFilterModal({
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className="text-slate-400 text-[11px]">{lang === 'fa' ? 'مرتب‌سازی:' : 'Sort By:'}</span>
-                  <select
+                  <CyberSelect
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-[#121622] border border-slate-700 rounded px-2 py-1 text-cyan-300 text-[11px] focus:outline-none cursor-pointer"
-                  >
-                    <option value="download">{lang === 'fa' ? 'بیشترین دانلود' : 'Top Download'}</option>
-                    <option value="upload">{lang === 'fa' ? 'بیشترین آپلود' : 'Top Upload'}</option>
-                    <option value="ping">{lang === 'fa' ? 'کمترین پینگ' : 'Lowest Ping'}</option>
-                  </select>
+                    onChange={(val) => setSortBy(val as any)}
+                    options={sortOptions}
+                    title={lang === 'fa' ? 'مرتب‌سازی نتایج بر اساس' : 'Sort Results By'}
+                  />
                 </div>
               </div>
             </div>

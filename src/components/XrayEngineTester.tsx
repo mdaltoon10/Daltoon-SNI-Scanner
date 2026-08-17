@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { injectSniIntoConfig, generateMultiFormatConfigs } from '../utils/configParser';
 import { safeReadClipboard, safeWriteClipboard } from '../utils/clipboard';
+import { CyberSelect, SelectOption } from './CyberSelect';
 import {
   Terminal,
   Cpu,
@@ -883,15 +884,16 @@ export function XrayEngineTester({
               <Sliders className="w-3.5 h-3.5 text-cyan-400" />
               {lang === 'fa' ? 'پروتکل ALPN:' : 'ALPN Transport:'}
             </label>
-            <select
+            <CyberSelect
               value={selectedAlpn}
-              onChange={(e) => setSelectedAlpn(e.target.value)}
-              className="w-full bg-[#06080D] border border-cyan-900/40 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400 font-mono cursor-pointer"
-            >
-              <option value="h2,http/1.1">h2, http/1.1 (Recommended)</option>
-              <option value="http/1.1">http/1.1 (Standard)</option>
-              <option value="h2">h2 Only</option>
-            </select>
+              onChange={(val) => setSelectedAlpn(val as string)}
+              options={[
+                { value: 'h2,http/1.1', label: 'h2, http/1.1', badge: 'Recommended' },
+                { value: 'http/1.1', label: 'http/1.1', badge: 'Standard' },
+                { value: 'h2', label: 'h2 Only' },
+              ]}
+              title={lang === 'fa' ? 'انتخاب پروتکل ALPN' : 'Select ALPN Transport'}
+            />
           </div>
 
           {/* Timeout */}
@@ -900,15 +902,16 @@ export function XrayEngineTester({
               <Activity className="w-3.5 h-3.5 text-cyan-400" />
               {lang === 'fa' ? 'حداکثر مهلت هر تست (Timeout):' : 'Per-Test Timeout:'}
             </label>
-            <select
+            <CyberSelect
               value={customTimeout}
-              onChange={(e) => setCustomTimeout(Number(e.target.value))}
-              className="w-full bg-[#06080D] border border-cyan-900/40 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-400 font-mono cursor-pointer"
-            >
-              <option value={3000}>3.0 {lang === 'fa' ? 'ثانیه (سریع)' : 'Seconds (Fast)'}</option>
-              <option value={4000}>4.0 {lang === 'fa' ? 'ثانیه (متعادل)' : 'Seconds (Balanced)'}</option>
-              <option value={6000}>6.0 {lang === 'fa' ? 'ثانیه (عمیق)' : 'Seconds (Deep)'}</option>
-            </select>
+              onChange={(val) => setCustomTimeout(Number(val))}
+              options={[
+                { value: 3000, label: lang === 'fa' ? '۳.۰ ثانیه' : '3.0s', badge: lang === 'fa' ? 'سریع' : 'Fast' },
+                { value: 4000, label: lang === 'fa' ? '۴.۰ ثانیه' : '4.0s', badge: lang === 'fa' ? 'متعادل' : 'Balanced' },
+                { value: 6000, label: lang === 'fa' ? '۶.۰ ثانیه' : '6.0s', badge: lang === 'fa' ? 'عمیق' : 'Deep' },
+              ]}
+              title={lang === 'fa' ? 'حداکثر زمان پاسخ' : 'Test Timeout Limit'}
+            />
           </div>
         </div>
       </div>
@@ -1012,25 +1015,18 @@ export function XrayEngineTester({
                   <Globe className="w-3.5 h-3.5 text-emerald-400" />
                   {lang === 'fa' ? 'منبع دامنه‌ها (SNI Pool):' : 'SNI Pool Source:'}
                 </label>
-                <select
+                <CyberSelect
                   value={sniSource}
-                  onChange={(e: any) => setSniSource(e.target.value)}
+                  onChange={(val) => setSniSource(val as any)}
                   disabled={isBatchTesting}
-                  className="w-full bg-[#080B12] border border-emerald-800/60 rounded-lg px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 cursor-pointer"
-                >
-                  <option value="curated_all">
-                    {lang === 'fa' ? 'کل SNIهای ضد فیلتر جهان (Yahoo, Cloudflare, Akamai, ...)' : 'All Curated Global SNIs (100+ Nodes)'}
-                  </option>
-                  <option value="scanned_clean">
-                    {lang === 'fa' ? `دامنه‌های سالم کشف‌شده در اسکنر (${scannedResults.filter(r => r.status === 'CLEAN').length} دامنه)` : `Clean Domains from Scanner (${scannedResults.filter(r => r.status === 'CLEAN').length})`}
-                  </option>
-                  <option value="online_github">
-                    {lang === 'fa' ? 'لیست‌های زنده گیت‌هاب (GitHub Anti-Filter SNIs)' : 'Live GitHub Anti-Censorship SNIs'}
-                  </option>
-                  <option value="custom">
-                    {lang === 'fa' ? 'دامنه‌های دستی و سفارشی شما' : 'Custom Pasted SNI List'}
-                  </option>
-                </select>
+                  options={[
+                    { value: 'curated_all', label: lang === 'fa' ? 'کل SNIهای ضد فیلتر جهان' : 'All Curated Global SNIs', badge: '100+ Nodes' },
+                    { value: 'scanned_clean', label: lang === 'fa' ? `دامنه‌های سالم اسکنر (${scannedResults.filter(r => r.status === 'CLEAN').length})` : `Clean Scanner SNIs (${scannedResults.filter(r => r.status === 'CLEAN').length})` },
+                    { value: 'online_github', label: lang === 'fa' ? 'لیست‌های زنده گیت‌هاب' : 'Live GitHub Anti-Censorship' },
+                    { value: 'custom', label: lang === 'fa' ? 'دامنه‌های دستی شما' : 'Custom Pasted SNI List' },
+                  ]}
+                  title={lang === 'fa' ? 'انتخاب منبع دامنه‌ها' : 'Select SNI Pool Source'}
+                />
               </div>
 
               {/* Number of SNIs to test */}
@@ -1039,18 +1035,19 @@ export function XrayEngineTester({
                   <ListFilter className="w-3.5 h-3.5 text-emerald-400" />
                   {lang === 'fa' ? 'تعداد دامنه‌ها برای تست:' : 'Test Count Limit:'}
                 </label>
-                <select
+                <CyberSelect
                   value={batchLimit}
-                  onChange={(e) => setBatchLimit(Number(e.target.value))}
+                  onChange={(val) => setBatchLimit(Number(val))}
                   disabled={isBatchTesting}
-                  className="w-full bg-[#080B12] border border-emerald-800/60 rounded-lg px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 cursor-pointer"
-                >
-                  <option value={20}>{lang === 'fa' ? '۲۰ دامنه برتر (تست فوق‌العاده سریع)' : '20 SNIs (Ultra Fast)'}</option>
-                  <option value={50}>{lang === 'fa' ? '۵۰ دامنه برتر (پیشنهادی)' : '50 SNIs (Recommended)'}</option>
-                  <option value={100}>{lang === 'fa' ? '۱۰۰ دامنه برتر (کامل)' : '100 SNIs (Comprehensive)'}</option>
-                  <option value={200}>{lang === 'fa' ? '۲۰۰ دامنه (حداکثر کاوش)' : '200 SNIs (Deep Sweep)'}</option>
-                  <option value={9999}>{lang === 'fa' ? 'کل دامنه‌های موجود (All)' : 'All Available SNIs'}</option>
-                </select>
+                  options={[
+                    { value: 20, label: lang === 'fa' ? '۲۰ دامنه برتر' : '20 SNIs', badge: 'Ultra Fast' },
+                    { value: 50, label: lang === 'fa' ? '۵۰ دامنه برتر' : '50 SNIs', badge: 'Recommended' },
+                    { value: 100, label: lang === 'fa' ? '۱۰۰ دامنه برتر' : '100 SNIs', badge: 'Comprehensive' },
+                    { value: 200, label: lang === 'fa' ? '۲۰۰ دامنه' : '200 SNIs', badge: 'Deep Sweep' },
+                    { value: 9999, label: lang === 'fa' ? 'همه دامنه‌ها' : 'All Available SNIs' },
+                  ]}
+                  title={lang === 'fa' ? 'تعداد دامنه‌های تست' : 'Select Test Count Limit'}
+                />
               </div>
 
               {/* Concurrency Level */}
@@ -1059,16 +1056,17 @@ export function XrayEngineTester({
                   <Cpu className="w-3.5 h-3.5 text-emerald-400" />
                   {lang === 'fa' ? 'موازی‌سازی پردازش هسته:' : 'Core Concurrency:'}
                 </label>
-                <select
+                <CyberSelect
                   value={batchConcurrency}
-                  onChange={(e) => setBatchConcurrency(Number(e.target.value))}
+                  onChange={(val) => setBatchConcurrency(Number(val))}
                   disabled={isBatchTesting}
-                  className="w-full bg-[#080B12] border border-emerald-800/60 rounded-lg px-3 py-2 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-400 cursor-pointer"
-                >
-                  <option value={2}>2 {lang === 'fa' ? 'پراسس همزمان Xray' : 'Parallel Xray Instances'}</option>
-                  <option value={3}>3 {lang === 'fa' ? 'پراسس همزمان (پیشنهادی)' : 'Parallel Instances (Standard)'}</option>
-                  <option value={4}>4 {lang === 'fa' ? 'پراسس همزمان (حداکثر سرعت)' : 'Parallel Instances (High Speed)'}</option>
-                </select>
+                  options={[
+                    { value: 2, label: '2 Parallel Instances' },
+                    { value: 3, label: '3 Parallel Instances', badge: 'Standard' },
+                    { value: 4, label: '4 Parallel Instances', badge: 'High Speed' },
+                  ]}
+                  title={lang === 'fa' ? 'موازی‌سازی هسته Xray' : 'Select Core Concurrency'}
+                />
               </div>
             </div>
 
@@ -1199,49 +1197,52 @@ export function XrayEngineTester({
                   {/* Min Download Filter */}
                   <div className="flex items-center gap-1.5 text-xs">
                     <span className="text-slate-400 text-[11px]">{lang === 'fa' ? 'حداقل دانلود:' : 'Min DL:'}</span>
-                    <select
+                    <CyberSelect
                       value={minDownloadFilter}
-                      onChange={(e) => setMinDownloadFilter(Number(e.target.value))}
-                      className="bg-[#06080D] border border-emerald-700/60 rounded px-2 py-1 text-emerald-300 text-xs font-mono focus:outline-none"
-                    >
-                      <option value={0}>{lang === 'fa' ? 'همه سرعت‌ها' : 'All (0 Mbps)'}</option>
-                      <option value={1}>≥ 1.0 Mbps</option>
-                      <option value={3}>≥ 3.0 Mbps</option>
-                      <option value={5}>≥ 5.0 Mbps</option>
-                      <option value={10}>≥ 10.0 Mbps</option>
-                      <option value={15}>≥ 15.0 Mbps</option>
-                    </select>
+                      onChange={(val) => setMinDownloadFilter(Number(val))}
+                      options={[
+                        { value: 0, label: lang === 'fa' ? 'همه (0 Mbps)' : 'All (0 Mbps)' },
+                        { value: 1, label: '≥ 1.0 Mbps' },
+                        { value: 3, label: '≥ 3.0 Mbps' },
+                        { value: 5, label: '≥ 5.0 Mbps' },
+                        { value: 10, label: '≥ 10.0 Mbps' },
+                        { value: 15, label: '≥ 15.0 Mbps' },
+                      ]}
+                      title={lang === 'fa' ? 'حداقل سرعت دانلود' : 'Minimum Download Speed'}
+                    />
                   </div>
 
                   {/* Min Upload Filter */}
                   <div className="flex items-center gap-1.5 text-xs">
                     <span className="text-slate-400 text-[11px]">{lang === 'fa' ? 'حداقل آپلود:' : 'Min UL:'}</span>
-                    <select
+                    <CyberSelect
                       value={minUploadFilter}
-                      onChange={(e) => setMinUploadFilter(Number(e.target.value))}
-                      className="bg-[#06080D] border border-cyan-700/60 rounded px-2 py-1 text-cyan-300 text-xs font-mono focus:outline-none"
-                    >
-                      <option value={0}>{lang === 'fa' ? 'همه سرعت‌ها' : 'All (0 Mbps)'}</option>
-                      <option value={0.5}>≥ 0.5 Mbps</option>
-                      <option value={1.0}>≥ 1.0 Mbps</option>
-                      <option value={2.0}>≥ 2.0 Mbps</option>
-                      <option value={5.0}>≥ 5.0 Mbps</option>
-                    </select>
+                      onChange={(val) => setMinUploadFilter(Number(val))}
+                      options={[
+                        { value: 0, label: lang === 'fa' ? 'همه (0 Mbps)' : 'All (0 Mbps)' },
+                        { value: 0.5, label: '≥ 0.5 Mbps' },
+                        { value: 1.0, label: '≥ 1.0 Mbps' },
+                        { value: 2.0, label: '≥ 2.0 Mbps' },
+                        { value: 5.0, label: '≥ 5.0 Mbps' },
+                      ]}
+                      title={lang === 'fa' ? 'حداقل سرعت آپلود' : 'Minimum Upload Speed'}
+                    />
                   </div>
 
                   {/* Sort by */}
                   <div className="flex items-center gap-1.5 text-xs">
                     <span className="text-slate-400 text-[11px]">{lang === 'fa' ? 'مرتب‌سازی:' : 'Sort:'}</span>
-                    <select
+                    <CyberSelect
                       value={sortBy}
-                      onChange={(e: any) => setSortBy(e.target.value)}
-                      className="bg-[#06080D] border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs font-mono focus:outline-none"
-                    >
-                      <option value="score">{lang === 'fa' ? 'امتیاز کلی کیفیت (پیشنهادی)' : 'Quality Score'}</option>
-                      <option value="download">{lang === 'fa' ? 'بیشترین دانلود' : 'Highest Download'}</option>
-                      <option value="upload">{lang === 'fa' ? 'بیشترین آپلود' : 'Highest Upload'}</option>
-                      <option value="ping">{lang === 'fa' ? 'کمترین پینگ' : 'Lowest Ping'}</option>
-                    </select>
+                      onChange={(val) => setSortBy(val as any)}
+                      options={[
+                        { value: 'score', label: lang === 'fa' ? 'امتیاز کیفیت' : 'Quality Score', badge: 'Recommended' },
+                        { value: 'download', label: lang === 'fa' ? 'بیشترین دانلود' : 'Top Download' },
+                        { value: 'upload', label: lang === 'fa' ? 'بیشترین آپلود' : 'Top Upload' },
+                        { value: 'ping', label: lang === 'fa' ? 'کمترین پینگ' : 'Lowest Ping' },
+                      ]}
+                      title={lang === 'fa' ? 'مرتب‌سازی نتایج' : 'Sort Results By'}
+                    />
                   </div>
 
                   {/* Only Active Up/Down Toggle */}

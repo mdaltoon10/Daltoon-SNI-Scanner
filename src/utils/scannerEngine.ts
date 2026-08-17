@@ -132,7 +132,7 @@ export async function probeSingleSni(
 
     // Fragmentation difficulty index
     let fragScore = 1;
-    if (status === 'TIMEOUT' || status === 'BLOCKED') {
+    if (status === 'TIMEOUT' || (status as string) === 'BLOCKED') {
       fragScore = Math.floor(Math.random() * 3) + 7;
     } else if (status === 'THROTTLED') {
       fragScore = Math.floor(Math.random() * 3) + 3;
