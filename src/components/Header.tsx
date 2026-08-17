@@ -10,8 +10,6 @@ interface HeaderProps {
   lang: 'fa' | 'en';
   onToggleLang: () => void;
   isScanning: boolean;
-  activeTab: 'sni_scanner' | 'xray_engine';
-  onSelectTab: (tab: 'sni_scanner' | 'xray_engine') => void;
   onOpenSpeedFilterModal?: () => void;
   cleanSpeedCount?: number;
   carrierInfo?: ClientCarrierInfo | null;
@@ -25,8 +23,6 @@ export function Header({
   lang,
   onToggleLang,
   isScanning,
-  activeTab,
-  onSelectTab,
   onOpenSpeedFilterModal,
   cleanSpeedCount = 0,
   carrierInfo,
@@ -47,7 +43,7 @@ export function Header({
 
   return (
     <header className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 border-b border-cyan-900/30 bg-[#0D0F16] text-slate-300 font-mono select-none z-20 gap-3">
-      {/* Brand & Mode Switcher */}
+      {/* Brand */}
       <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
         <div className="flex items-center gap-2.5">
           <div
@@ -62,38 +58,10 @@ export function Header({
               <Radio className="w-5 h-5 text-cyan-400" />
               Daltoon SNI Scanner
             </h1>
-            <span className="text-[10px] sm:text-xs font-normal text-slate-500 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-800">
-              XRAY-CORE
+            <span className="text-[10px] sm:text-xs font-normal text-cyan-400/80 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/60">
+              REAL CLIENT PROBE
             </span>
           </div>
-        </div>
-
-        {/* Top Mode Tabs */}
-        <div className="flex items-center bg-[#07090E] p-1 rounded-lg border border-cyan-900/40">
-          <button
-            onClick={() => onSelectTab('sni_scanner')}
-            className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition-all cursor-pointer ${
-              activeTab === 'sni_scanner'
-                ? 'bg-cyan-950/90 text-cyan-300 font-semibold shadow-[0_0_12px_rgba(6,182,212,0.25)] border border-cyan-700/50'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Radio className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{lang === 'fa' ? 'اسکنر SNI' : 'SNI Scanner'}</span>
-          </button>
-
-          <button
-            onClick={() => onSelectTab('xray_engine')}
-            className={`flex items-center gap-2 px-3 py-1 rounded-md text-xs transition-all cursor-pointer relative ${
-              activeTab === 'xray_engine'
-                ? 'bg-purple-950/90 text-purple-200 font-semibold shadow-[0_0_12px_rgba(168,85,247,0.3)] border border-purple-600/60'
-                : 'text-slate-400 hover:text-purple-300'
-            }`}
-          >
-            <Cpu className="w-3.5 h-3.5 text-purple-400" />
-            <span>{lang === 'fa' ? '⚡ تست با هسته Xray' : '⚡ Native Xray Engine'}</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-          </button>
         </div>
       </div>
 

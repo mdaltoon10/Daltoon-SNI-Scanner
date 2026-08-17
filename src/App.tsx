@@ -3,7 +3,6 @@ import { Sparkles, SlidersHorizontal } from 'lucide-react';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { ActiveProbeFeed } from './components/ActiveProbeFeed';
-import { XrayEngineTester } from './components/XrayEngineTester';
 import { DeepSpeedtestModal } from './components/DeepSpeedtestModal';
 import { ConfigGeneratorModal } from './components/ConfigGeneratorModal';
 import { CustomSniModal } from './components/CustomSniModal';
@@ -24,8 +23,7 @@ import { parseProxyConfig, generateMultiFormatConfigs } from './utils/configPars
 import { detectClientOperator, ClientCarrierInfo, CARRIER_SIGNATURES } from './utils/carrierDetector';
 
 export function App() {
-  // 1. Core State (Default: SNI Scanner)
-  const [activeTab, setActiveTab] = useState<'sni_scanner' | 'xray_engine'>('sni_scanner');
+  // 1. Core State
   const [lang, setLang] = useState<'fa' | 'en'>('fa');
   const [rawConfig, setRawConfig] = useState<string>('');
   const [parsedConfig, setParsedConfig] = useState<ParsedProxyConfig | null>(null);
@@ -436,8 +434,6 @@ export function App() {
           lang={lang}
           onToggleLang={() => setLang(lang === 'fa' ? 'en' : 'fa')}
           isScanning={isScanning}
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
           onOpenSpeedFilterModal={() => setIsSpeedFilterModalOpen(true)}
           cleanSpeedCount={cleanSpeedCount}
           carrierInfo={carrierInfo}
@@ -465,69 +461,43 @@ export function App() {
           isScanning={isScanning}
         />
 
-        {activeTab === 'sni_scanner' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
-            {/* Left: Input, Controls & Online Fetcher (Sticky on Desktop) */}
-            <Sidebar
-              parameters={parameters}
-              onChangeParameters={setParameters}
-              rawConfig={rawConfig}
-              onChangeRawConfig={setRawConfig}
-              parsedConfig={parsedConfig}
-              onStartScan={handleStartScan}
-              onStopScan={handleStopScan}
-              isScanning={isScanning}
-              onOpenCustomModal={() => setIsCustomModalOpen(true)}
-              onFetchOnlineSnis={() => handleFetchOnlineSnis()}
-              isFetchingOnline={isFetchingOnline}
-              onlineFetchCount={onlineFetchCount}
-              currentProfile={currentProfile}
-              lang={lang}
-              totalSnisInQueue={activeQueue.length}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
+          {/* Left: Input, Controls & Online Fetcher (Sticky on Desktop) */}
+          <Sidebar
+            parameters={parameters}
+            onChangeParameters={setParameters}
+            rawConfig={rawConfig}
+            onChangeRawConfig={setRawConfig}
+            parsedConfig={parsedConfig}
+            onStartScan={handleStartScan}
+            onStopScan={handleStopScan}
+            isScanning={isScanning}
+            onOpenCustomModal={() => setIsCustomModalOpen(true)}
+            onFetchOnlineSnis={() => handleFetchOnlineSnis()}
+            isFetchingOnline={isFetchingOnline}
+            onlineFetchCount={onlineFetchCount}
+            currentProfile={currentProfile}
+            lang={lang}
+            totalSnisInQueue={activeQueue.length}
+          />
 
-            {/* Right: Live Benchmark Table & Speed Stats (Seamlessly Expanding) */}
-            <ActiveProbeFeed
-              results={results}
-              isScanning={isScanning}
-              onOpenSpeedTest={(sni) => setSelectedSpeedTestSni(sni)}
-              onApplySniToConfig={(sni) => setSelectedConfigSni(sni)}
-              onExportSnis={handleExportSnis}
-              onTestWithXray={(sni) => {
-                let targetCfg = rawConfig;
-                if (parsedConfig) {
-                  const multi = generateMultiFormatConfigs(parsedConfig, sni);
-                  targetCfg = multi.vless;
-                } else {
-                  targetCfg = `vless://d2c18400-6c9a-4c28-98e3-0d33b5c19208@104.16.12.34:443?security=tls&encryption=none&headerType=none&type=tcp&sni=${sni}#Iran-SNI-${sni}`;
-                }
-                setRawConfig(targetCfg);
-                setActiveTab('xray_engine');
-              }}
-              onFetchGlobalStream={handleFetchGlobalStream}
-              onOpenSpeedFilterModal={() => setIsSpeedFilterModalOpen(true)}
-              isStreamingGlobal={isStreamingGlobal}
-              parsedConfig={parsedConfig}
-              rawConfig={rawConfig}
-              lang={lang}
-              liveLogs={liveLogs}
-              onClearLogs={() => setLiveLogs([])}
-            />
-          </div>
-        ) : (
-          <div className="w-full">
-            <XrayEngineTester
-              rawConfig={rawConfig}
-              onChangeRawConfig={setRawConfig}
-              parsedConfig={parsedConfig}
-              lang={lang}
-              scannedResults={results}
-              onApplyConfigToDashboard={(newCfg) => {
-                setRawConfig(newCfg);
-              }}
-            />
-          </div>
-        )}
+          {/* Right: Live Benchmark Table & Speed Stats (Seamlessly Expanding) */}
+          <ActiveProbeFeed
+            results={results}
+            isScanning={isScanning}
+            onOpenSpeedTest={(sni) => setSelectedSpeedTestSni(sni)}
+            onApplySniToConfig={(sni) => setSelectedConfigSni(sni)}
+            onExportSnis={handleExportSnis}
+            onFetchGlobalStream={handleFetchGlobalStream}
+            onOpenSpeedFilterModal={() => setIsSpeedFilterModalOpen(true)}
+            isStreamingGlobal={isStreamingGlobal}
+            parsedConfig={parsedConfig}
+            rawConfig={rawConfig}
+            lang={lang}
+            liveLogs={liveLogs}
+            onClearLogs={() => setLiveLogs([])}
+          />
+        </div>
 
         {/* Bottom Section: لیست دامنه های سفارسی و تنظیم مقدار دانلود/اپلود اسپید تست */}
         <div className="w-full bg-gradient-to-r from-[#0B0F17] via-[#0E1524] to-[#0B0F17] p-4 sm:p-5 rounded-2xl border border-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.15)] flex flex-wrap items-center justify-between gap-4 font-mono">

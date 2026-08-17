@@ -36,7 +36,6 @@ interface ActiveProbeFeedProps {
   onOpenSpeedTest: (sni: string) => void;
   onApplySniToConfig: (sni: string) => void;
   onExportSnis: (snis: SniScanResult[], format: 'txt' | 'json' | 'vless') => void;
-  onTestWithXray?: (sni: string) => void;
   onFetchGlobalStream?: (category: string, count: number, offset?: number) => void;
   onOpenSpeedFilterModal?: () => void;
   isStreamingGlobal?: boolean;
@@ -766,17 +765,6 @@ export function ActiveProbeFeed({
                             <Copy className="w-3.5 h-3.5" />
                           )}
                         </button>
-
-                        {/* 1-Click Xray Core Native Engine Test */}
-                        {onTestWithXray && (
-                          <button
-                            onClick={() => onTestWithXray(item.domain)}
-                            title={lang === 'fa' ? 'تست و بهینه‌سازی زنده با هسته Xray' : 'Test with Xray Core'}
-                            className="p-1.5 rounded bg-purple-950/80 border border-purple-800/80 text-purple-300 hover:text-white hover:bg-purple-900/80 transition-colors cursor-pointer"
-                          >
-                            <Cpu className="w-3.5 h-3.5" />
-                          </button>
-                        )}
 
                         {/* Deep Speedtest Modal */}
                         <button
