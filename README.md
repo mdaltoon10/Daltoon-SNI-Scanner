@@ -56,9 +56,8 @@ bash <(curl -sSL https://raw.githubusercontent.com/mdaltoon10/Daltoon-SNI-Scanne
 
 ## 👨‍💻 سازنده و پشتیبانی (Developer)
 
-- **برنامه‌نویس:** **mDaltoon**
+- **سازنده:** **mDaltoon**
 - **ارتباط در تلگرام:** [https://t.me/mDaltoon](https://t.me/mDaltoon)
-- **گیت‌هاب ریپازیتوری:** [https://github.com/mdaltoon10/Daltoon-SNI-Scanner](https://github.com/mdaltoon10/Daltoon-SNI-Scanner)
 
 ---
 
