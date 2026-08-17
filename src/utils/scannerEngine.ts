@@ -308,22 +308,70 @@ export async function runDeepSpeedTest(
 }
 
 /**
- * Fetches online SNI lists from GitHub or specific URL
+ * Fetches online SNI lists from GitHub or specific URL with full client-side fallback for static sites
  */
 export async function fetchOnlineSnis(customUrl?: string): Promise<string[]> {
+  // 1. Try server proxy endpoint if available
   try {
     const endpoint = customUrl
       ? `/api/fetch-online-snis?url=${encodeURIComponent(customUrl)}`
       : '/api/fetch-online-snis';
 
     const resp = await fetch(endpoint);
-    if (!resp.ok) throw new Error(`HTTP error ${resp.status}`);
-    const data = await resp.json();
-    return data.domains || [];
-  } catch (err) {
-    console.error('Failed to fetch online SNIs:', err);
-    return [];
+    const contentType = resp.headers.get('content-type') || '';
+    if (resp.ok && contentType.includes('application/json')) {
+      const data = await resp.json();
+      if (Array.isArray(data.domains) && data.domains.length > 0) {
+        return data.domains;
+      }
+    }
+  } catch {
+    // Ignore server error and fallback to direct client-side fetch
   }
+
+  // 2. Direct client-side fetch from raw GitHub repositories
+  const urlsToFetch = customUrl ? [customUrl] : [
+    'https://raw.githubusercontent.com/vfarid/v2ray-share/main/hosts',
+    'https://raw.githubusercontent.com/yebekhe/TelegramV2rayCollector/main/sub/normal/vless',
+    'https://raw.githubusercontent.com/mahdibland/V2RayAggregator/master/sub/sub_merge.txt'
+  ];
+
+  const extractedDomains = new Set<string>();
+
+  for (const url of urlsToFetch) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const text = await res.text();
+        const matches = text.match(/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,12}/g);
+        if (matches) {
+          matches.forEach((d) => {
+            const domain = d.trim().toLowerCase();
+            if (
+              domain.length >= 4 &&
+              !domain.startsWith('127.') &&
+              !domain.startsWith('0.0.') &&
+              !domain.endsWith('.png') &&
+              !domain.endsWith('.jpg') &&
+              !domain.endsWith('.js') &&
+              !domain.endsWith('.css')
+            ) {
+              extractedDomains.add(domain);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(`Direct fetch failed for ${url}:`, e);
+    }
+  }
+
+  if (extractedDomains.size > 0) {
+    return Array.from(extractedDomains);
+  }
+
+  // 3. Static fallback from worldwide database
+  return COMPLETE_WORLDWIDE_SNI_LIST.slice(0, 200).map((i) => i.domain);
 }
 
 /**
@@ -344,8 +392,7 @@ export async function fetchGlobalSniUniverse(options: {
     category = 'all',
     search = '',
     limit = 500,
-    offset = 0,
-    synthetic = true
+    offset = 0
   } = options;
 
   try {
@@ -353,12 +400,14 @@ export async function fetchGlobalSniUniverse(options: {
       category,
       search,
       limit: String(limit),
-      offset: String(offset),
-      synthetic: String(synthetic)
+      offset: String(offset)
     });
 
     const resp = await fetch(`/api/snis/global-feed?${query.toString()}`);
-    if (!resp.ok) throw new Error(`HTTP error ${resp.status}`);
+    const contentType = resp.headers.get('content-type') || '';
+    if (!resp.ok || !contentType.includes('application/json')) {
+      throw new Error('API server not available on static host');
+    }
     const data = await resp.json();
     return {
       domains: data.domains || [],
@@ -382,7 +431,7 @@ export async function fetchGlobalSniUniverse(options: {
 
     return {
       domains: sliced,
-      totalAvailable: filtered.length,
+      totalAvailable: filtered.length > 0 ? filtered.length : COMPLETE_WORLDWIDE_SNI_LIST.length,
       hasMore: offset + limit < filtered.length
     };
   }

@@ -107,7 +107,7 @@ export function ActiveProbeFeed({
   // Count SNIs with active Up/Down
   const activeUpDownCount = useMemo(() => {
     return results.filter(
-      (r) => r.status !== 'IDLE' && r.status !== 'TESTING' && r.status !== 'BLOCKED' &&
+      (r) => Boolean(r.testedAt) && r.status === 'CLEAN' &&
              (r.downloadSpeed || 0) > 0.5 && (r.uploadSpeed || 0) > 0.2
     ).length;
   }, [results]);

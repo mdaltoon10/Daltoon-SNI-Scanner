@@ -145,7 +145,7 @@ export function CleanSpeedFilterModal({
   const handleCopyConfig = (domain: string, id: string) => {
     const configToCopy = parsedConfig
       ? injectSniIntoConfig(parsedConfig, domain)
-      : `vless://8e93d46e-96fe-4ae9-91a6-97893991db03@matin.daltoonserver.ir:23614?security=&encryption=none&host=${domain}&headerType=http&type=tcp#Host-${domain}`;
+      : domain;
 
     navigator.clipboard.writeText(configToCopy);
     setCopiedId(id);
@@ -159,7 +159,7 @@ export function CleanSpeedFilterModal({
         if (parsedConfig) {
           return injectSniIntoConfig(parsedConfig, item.domain);
         }
-        return `vless://8e93d46e-96fe-4ae9-91a6-97893991db03@matin.daltoonserver.ir:23614?security=&encryption=none&host=${item.domain}&headerType=http&type=tcp#Host-${item.domain}`;
+        return item.domain;
       })
       .join('\n');
 

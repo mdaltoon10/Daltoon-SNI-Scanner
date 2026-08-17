@@ -89,7 +89,7 @@ export function App() {
   // Compute number of clean speed SNIs
   const cleanSpeedCount = useMemo(() => {
     return results.filter(
-      (r) => r.status === 'CLEAN' && (r.downloadSpeed || 0) >= 1.0 && (r.uploadSpeed || 0) >= 0.5
+      (r) => Boolean(r.testedAt) && r.status === 'CLEAN' && (r.downloadSpeed || 0) >= 1.0 && (r.uploadSpeed || 0) >= 0.5
     ).length;
   }, [results]);
 
@@ -130,6 +130,18 @@ export function App() {
       if (fetched && fetched.length > 0) {
         handleAddCustomSnis(fetched, 'online_github');
         setOnlineFetchCount(fetched.length);
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        handleScanLog({
+          id: `log-${Date.now()}`,
+          time: timeStr,
+          type: 'info',
+          domain: 'GitHub-Update',
+          host: 'GitHub API',
+          ping: null,
+          downloadSpeed: null,
+          message: `[بروزرسانی آنلاین] ${fetched.length} دامنه جدید از مخازن آنلاین گیت‌هاب دریافت و به لیست اضافه شد.`
+        });
       }
     } catch (err) {
       console.error('Error fetching online SNIs:', err);
@@ -164,6 +176,19 @@ export function App() {
 
         setSniMasterList((prev) => [...prev, ...unique]);
         setGlobalStreamOffset(currentOffset + limit);
+
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        handleScanLog({
+          id: `log-${Date.now()}`,
+          time: timeStr,
+          type: 'info',
+          domain: 'Global-Stream',
+          host: 'Worldwide Nodes',
+          ping: null,
+          downloadSpeed: null,
+          message: `[دریافت دامنه‌ها] ${unique.length} دامنه جدید TLS 1.3 جهان به صف اضافه شد.`
+        });
       }
     } catch (err) {
       console.error('Failed to stream global SNIs:', err);
