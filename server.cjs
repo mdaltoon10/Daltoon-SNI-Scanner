@@ -1112,6 +1112,47 @@ async function executeXrayBatchSniTest(rawConfig, snis, options) {
 }
 
 // server/globalSniDatabase.ts
+var ECH_GLOBAL_DOMAINS = [
+  "cloudflare-ech.com",
+  "crypto.cloudflare.com",
+  "tls-ech.dev",
+  "defo.ie",
+  "cloudflare-quic.com",
+  "trycloudflare.com",
+  "argo.cloudflare.com",
+  "mask.icloud.com",
+  "mask-api.icloud.com",
+  "mask-h2.icloud.com",
+  "dns.google",
+  "dns.quad9.net",
+  "dns.adguard-dns.com",
+  "freedns.controld.com",
+  "security.cloudflare-dns.com",
+  "one.one.one.one",
+  "speed.cloudflare.com",
+  "cp.cloudflare.com",
+  "connectivitycheck.android.com",
+  "connectivitycheck.gstatic.com",
+  "msftconnecttest.com",
+  "deflect.ca"
+];
+var AI_GLOBAL_DOMAINS = [
+  "gemini.google.com",
+  "ai.google.dev",
+  "aistudio.google.com",
+  "copilot.microsoft.com",
+  "designer.microsoft.com",
+  "claude.ai",
+  "anthropic.com",
+  "chatgpt.com",
+  "cdn.oaistatic.com",
+  "huggingface.co",
+  "replicate.com",
+  "perplexity.ai",
+  "deepseek.com",
+  "mistral.ai",
+  "groq.com"
+];
 var YAHOO_GLOBAL_DOMAINS = [
   "yahoo.com",
   "www.yahoo.com",
@@ -1439,6 +1480,18 @@ var TRANCO_TOP_GLOBAL_DOMAINS = [
 function generateSyntheticEdgeSnis(baseCategory, count = 500, offset = 0) {
   const generated = [];
   const providers = {
+    ech: [
+      (i) => `ech-node-${i % 100 + 1}.cloudflare-ech.com`,
+      (i) => `crypto-edge-${i % 50 + 1}.crypto.cloudflare.com`,
+      (i) => `dns-${i % 254 + 1}.dns.google`,
+      (i) => `mask-h2-${i % 30 + 1}.mask.icloud.com`
+    ],
+    ai: [
+      (i) => `gemini-edge-${i % 50 + 1}.google.com`,
+      (i) => `copilot-node-${i % 50 + 1}.microsoft.com`,
+      (i) => `claude-edge-${i % 30 + 1}.claude.ai`,
+      (i) => `ai-model-${i % 50 + 1}.huggingface.co`
+    ],
     yahoo: [
       (i) => `s${i % 10 + 1}.yimg.com`,
       (i) => `node-${i % 254 + 1}.finance.yahoo.com`,
@@ -1504,6 +1557,26 @@ function getMasterSniUniverse(options) {
     generateSynthetic = true
   } = options;
   let baseList = [];
+  if (category === "all" || category === "ech") {
+    baseList.push(
+      ...ECH_GLOBAL_DOMAINS.map((d) => ({
+        domain: d,
+        category: "ech",
+        cdn: "TLS 1.3 / ECH Anti-Filter",
+        isPopular: true
+      }))
+    );
+  }
+  if (category === "all" || category === "ai") {
+    baseList.push(
+      ...AI_GLOBAL_DOMAINS.map((d) => ({
+        domain: d,
+        category: "ai",
+        cdn: "AI & Copilot TLS 1.3 Edge",
+        isPopular: true
+      }))
+    );
+  }
   if (category === "all" || category === "yahoo") {
     baseList.push(
       ...YAHOO_GLOBAL_DOMAINS.map((d) => ({
