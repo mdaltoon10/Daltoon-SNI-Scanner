@@ -402,6 +402,13 @@ function buildExpandedGlobalSniPool(category: string, search: string): { domain:
 
   // 2. Generate dynamic valid CDN cluster nodes & subdomains if needed
   const cdnTemplates = [
+    { cat: 'ech', base: 'cloudflare-ech.com', prefix: 'ech-', cdn: 'Cloudflare ECH TLS 1.3 Node', max: 500 },
+    { cat: 'ech', base: 'crypto.cloudflare.com', prefix: 'edge-', cdn: 'Cloudflare Crypto ECH Edge', max: 500 },
+    { cat: 'ech', base: 'mask.icloud.com', prefix: 'node-', cdn: 'Apple Private Relay ECH Node', max: 300 },
+    { cat: 'ai', base: 'google.com', prefix: 'gemini-node-', cdn: 'Google Gemini AI Edge Cluster', max: 500 },
+    { cat: 'ai', base: 'microsoft.com', prefix: 'copilot-', cdn: 'Microsoft Copilot Global Edge', max: 500 },
+    { cat: 'ai', base: 'claude.ai', prefix: 'edge-', cdn: 'Anthropic Claude AI Edge', max: 300 },
+    { cat: 'ai', base: 'huggingface.co', prefix: 'model-cdn-', cdn: 'Hugging Face AI Model Edge', max: 300 },
     { cat: 'yahoo', base: 'yimg.com', prefix: 's', cdn: 'Yahoo Global Asset CDN', max: 500 },
     { cat: 'yahoo', base: 'yahoo.com', prefix: 'node', cdn: 'Yahoo Anycast Edge Node', max: 500 },
     { cat: 'cloudflare', base: 'workers.dev', prefix: 'cdn-', cdn: 'Cloudflare Workers Edge', max: 500 },

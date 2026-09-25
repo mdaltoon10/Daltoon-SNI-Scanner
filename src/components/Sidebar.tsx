@@ -72,6 +72,8 @@ export function Sidebar({
 
   const categoryOptions: SelectOption<string>[] = [
     { value: 'all', label: lang === 'fa' ? 'همه دامنه‌ها (All SNIs)' : 'All SNIs (Full Pool)', badge: 'TLS 1.3' },
+    { value: 'ech', label: lang === 'fa' ? 'دامنه‌های ضد فیلتر ECH و TLS 1.3' : 'ECH & Anti-Filter TLS 1.3', badge: 'Ultra Safe' },
+    { value: 'ai', label: lang === 'fa' ? 'هوش مصنوعی (Gemini / Copilot / Claude)' : 'AI & Copilot TLS 1.3 Edge', badge: 'New 2026' },
     { value: 'yahoo', label: 'Yahoo & Search Portals (www.yahoo.com)', badge: 'High Stability' },
     { value: 'cloudflare', label: 'Cloudflare Edge & Workers', badge: 'CDN Edge' },
     { value: 'microsoft', label: 'Microsoft / Skype / Teams', badge: 'Enterprise' },

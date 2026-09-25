@@ -50,6 +50,8 @@ interface ActiveProbeFeedProps {
 
 const CATEGORY_CHIPS = [
   { id: 'all', nameEn: 'All SNIs', nameFa: 'همه دامنه‌های جهان (TLS 1.3)', icon: Globe2 },
+  { id: 'ech', nameEn: 'ECH & Anti-Filter', nameFa: 'دامنه‌های ECH و ضد فیلتر', icon: Sparkles },
+  { id: 'ai', nameEn: 'AI & Copilot TLS 1.3', nameFa: 'هوش مصنوعی و Gemini/Copilot', icon: Cpu },
   { id: 'yahoo', nameEn: 'Yahoo! Network', nameFa: 'یاهو (Yahoo World)', icon: Radio },
   { id: 'cloudflare', nameEn: 'Cloudflare Edge', nameFa: 'کلودفلر (Cloudflare)', icon: Flame },
   { id: 'akamai', nameEn: 'Akamai Global', nameFa: 'آکامای (Akamai)', icon: Layers },
@@ -394,6 +396,19 @@ export function ActiveProbeFeed({
           {/* 1-Click Fetch Global Batches */}
           {onFetchGlobalStream && (
             <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => onFetchGlobalStream('ech', 500)}
+                disabled={isStreamingGlobal}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-900 to-indigo-900 hover:from-cyan-800 hover:to-indigo-800 border border-cyan-400 text-cyan-100 rounded-md text-xs font-bold shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
+                <span>
+                  {isStreamingGlobal
+                    ? lang === 'fa' ? 'در حال بارگذاری...' : 'Loading...'
+                    : lang === 'fa' ? '✨ جدیدترین دامنه‌های TLS 1.3 و ECH (۲۰۲۶)' : '✨ Newest TLS 1.3 & ECH (2026)'}
+                </span>
+              </button>
+
               <button
                 onClick={() => onFetchGlobalStream('all', 1000)}
                 disabled={isStreamingGlobal}

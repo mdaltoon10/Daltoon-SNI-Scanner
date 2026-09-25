@@ -2,6 +2,8 @@ export interface SniItem {
   id: string;
   domain: string;
   category:
+    | 'ech'
+    | 'ai'
     | 'cloudflare'
     | 'yahoo'
     | 'microsoft'
